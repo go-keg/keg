@@ -1,0 +1,7 @@
+package server
+{{/* gotype: github.com/go-keg/keg/cmd/codegen/new.Config */}}
+import (
+    "github.com/google/wire"
+)
+
+var ProviderSet = wire.NewSet(NewHTTPServer{{if .UseGRPC}}, NewGRPCServer{{end}})

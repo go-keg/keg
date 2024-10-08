@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package response;
+
+option go_package = "github.com/go-keg/keg/third_party/response;response";
+
+import "google/protobuf/descriptor.proto";
+
+message Response {
+  int32 httpCode = 1;
+  int32 code = 2;
+  string reason = 3;
+  string message = 4;
+  map<string, string> metadata = 5;
+};
+
+extend google.protobuf.EnumOptions {
+  int32 default_code = 1208;
+}
+
+extend google.protobuf.EnumValueOptions {
+  int32 code = 1209;
+  string msg = 1210;
+}

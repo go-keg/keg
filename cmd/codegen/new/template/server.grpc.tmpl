@@ -1,0 +1,13 @@
+package server
+{{/* gotype: github.com/go-keg/keg/cmd/codegen/new.Config */}}
+import (
+    "github.com/go-kratos/kratos/v2/log"
+    "github.com/go-kratos/kratos/v2/transport/grpc"
+    "{{.PkgName}}/internal/app/{{.Service.KebabCase}}/conf"
+)
+
+// NewGRPCServer new GRPC server.
+func NewGRPCServer(c *conf.{{.Service.PascalCase}}, logger log.Logger) *grpc.Server {
+    server := grpc.NewServer(c.Server.Grpc.GrpcOptions(logger)...)
+    return server
+}

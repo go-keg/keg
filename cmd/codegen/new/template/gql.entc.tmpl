@@ -1,0 +1,44 @@
+//go:build ignore
+// +build ignore
+{{/* gotype: github.com/go-keg/keg/cmd/codegen/new.Config */}}
+package main
+
+import (
+    "entgo.io/contrib/entgql"
+    "entgo.io/ent/entc"
+    "entgo.io/ent/entc/gen"
+    "log"
+    "runtime"
+    "strings"
+    "github.com/go-keg/keg/contrib/ent/annotations"
+)
+
+func main() {
+    ex, err := entgql.NewExtension(
+        entgql.WithConfigPath("./gqlgen.yml"),
+        entgql.WithSchemaGenerator(),
+        entgql.WithSchemaPath("./ent.graphql"),
+        entgql.WithWhereInputs(true),
+        entgql.WithNodeDescriptor(true),
+        entgql.WithSchemaHook(annotations.EnumsGQLSchemaHook),
+    )
+    if err != nil {
+        log.Fatalf("creating entgql extension: %v", err)
+    }
+    _, filename, _, _ := runtime.Caller(0)
+    entPath := strings.TrimSuffix(filename, "ent/entc.go")
+    if err = entc.Generate(entPath+"ent/schema",
+        &gen.Config{Features: []gen.Feature{
+            gen.FeatureIntercept,
+            gen.FeatureSnapshot,
+            gen.FeatureModifier,
+            gen.FeatureExecQuery,
+            gen.FeatureUpsert,
+        }},
+        entc.Extensions(ex),
+        entc.TemplateDir(entPath+"../template", entc.TemplateFuncs(entgql.TemplateFuncs)),
+    ); err != nil {
+        log.Fatalf("running ent codegen: %v", err)
+    }
+}
+
