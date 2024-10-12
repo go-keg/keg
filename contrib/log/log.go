@@ -12,9 +12,15 @@ import (
 
 type KeyValue func() (string, any)
 
-func ServiceID(val string) KeyValue {
+func ServiceInstanceID(val string) KeyValue {
 	return func() (string, any) {
-		return "service.id", val
+		return "service.instance.id", val
+	}
+}
+
+func DeploymentEnvironment(val string) KeyValue {
+	return func() (string, any) {
+		return "environment", val
 	}
 }
 

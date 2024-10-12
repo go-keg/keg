@@ -36,8 +36,9 @@ func offsetLimit(page *int, size *int) (int, int) {
     }
     return offset, limit
 }
+{{ $gqlNodes := filterNodes $.Nodes (skipMode "type") }}
+{{ range $node := $gqlNodes }}
 
-{{ range $node := $.Nodes }}
 {{ $receiver := $node.Receiver }}
 {{ $query := $node.QueryName }}
 // CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
