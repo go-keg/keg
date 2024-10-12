@@ -83,9 +83,25 @@ func (db *Database) Close() error {
 
 {{ range $n := $.Nodes }}
     {{ $client := print $n.Name "Client" }}
+    {{ $query := $n.QueryName }}
     // {{ $n.Name }} is the client for interacting with the {{ $n.Name }} builders.
     func (db *Database) {{ $n.Name }}(ctx context.Context) *{{ $client }} {
-    return db.loadClient(ctx).{{ $n.Name }}
+        return db.loadClient(ctx).{{ $n.Name }}
+    }
+
+    // WhereP appends storage-level predicates to the query builder. Using this method, users
+    // can use type-assertion to append predicates that do not depend on any generated package.
+    func (q *{{$query}}) WhereP(ps ...func(*sql.Selector)) {
+        for i := range ps {
+            q.predicates = append(q.predicates, ps[i])
+        }
+    }
+{{ end }}
+
+{{ range $n := $.Nodes }}
+    {{ $mutation := print $n.Name "Mutation" }}
+    func (m {{$mutation}}) Mutate(ctx context.Context, mu Mutation) (Value, error){
+        return m.Client().Mutate(ctx, mu)
     }
 {{ end }}
 

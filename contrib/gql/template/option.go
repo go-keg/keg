@@ -1,18 +1,20 @@
 package template
 
 import (
+	"embed"
 	_ "embed"
 	"entgo.io/contrib/entgql"
 	"entgo.io/ent/entc/gen"
+	"log"
 )
 
-//go:embed gql_custom.tmpl
-var temp []byte
+//go:embed *.tmpl
+var fs embed.FS
 
 func Template() *gen.Template {
-	template, err := gen.NewTemplate("gql_custom").Parse(string(temp))
+	template, err := gen.NewTemplate("gql_custom").Funcs(entgql.TemplateFuncs).ParseFS(fs, "*.tmpl")
 	if err != nil {
-		return nil
+		log.Fatalf("gql template error: %s\n", err)
 	}
-	return template.Funcs(entgql.TemplateFuncs)
+	return template
 }

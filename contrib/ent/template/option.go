@@ -1,17 +1,18 @@
 package template
 
 import (
+	"embed"
 	_ "embed"
 	"entgo.io/ent/entc"
 	"entgo.io/ent/entc/gen"
 )
 
-//go:embed database.tmpl
-var temp []byte
+//go:embed *.tmpl
+var fs embed.FS
 
 func Template() entc.Option {
 	return templateOption(func(t *gen.Template) (*gen.Template, error) {
-		return t.Parse(string(temp))
+		return t.ParseFS(fs, "*.tmpl")
 	})
 }
 
