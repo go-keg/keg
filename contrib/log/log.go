@@ -1,6 +1,7 @@
 package log
 
 import (
+	"context"
 	"fmt"
 	"github.com/go-keg/keg/contrib/config"
 	"github.com/go-kratos/kratos/v2/log"
@@ -10,29 +11,37 @@ import (
 	"time"
 )
 
-type KeyValue func() (string, any)
+type KeyValue func() (string, log.Valuer)
 
 func ServiceInstanceID(val string) KeyValue {
-	return func() (string, any) {
-		return "service.instance.id", val
+	return func() (string, log.Valuer) {
+		return "service.instance.id", func(ctx context.Context) interface{} {
+			return val
+		}
 	}
 }
 
 func DeploymentEnvironment(val string) KeyValue {
-	return func() (string, any) {
-		return "environment", val
+	return func() (string, log.Valuer) {
+		return "environment", func(ctx context.Context) interface{} {
+			return val
+		}
 	}
 }
 
 func ServiceName(val string) KeyValue {
-	return func() (string, any) {
-		return "service.name", val
+	return func() (string, log.Valuer) {
+		return "service.name", func(ctx context.Context) interface{} {
+			return val
+		}
 	}
 }
 
 func ServiceVersion(val string) KeyValue {
-	return func() (string, any) {
-		return "service.version", val
+	return func() (string, log.Valuer) {
+		return "service.version", func(ctx context.Context) interface{} {
+			return val
+		}
 	}
 }
 
