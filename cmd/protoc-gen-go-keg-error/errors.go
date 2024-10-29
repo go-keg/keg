@@ -2,12 +2,11 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/go-keg/keg/third_party/response"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
+	"github.com/samber/lo"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
-	"strings"
 )
 
 const (
@@ -42,7 +41,7 @@ func generateFileContent(gen *protogen.Plugin, file *protogen.File, g *protogen.
 	index := 0
 	for _, enum := range file.Enums {
 		skip := genErrorsReason(gen, file, g, enum)
-		if skip == false {
+		if !skip {
 			index++
 		}
 	}
@@ -74,7 +73,7 @@ func genErrorsReason(gen *protogen.Plugin, file *protogen.File, g *protogen.Gene
 			enumMsg = val
 		}
 		// If the current enumeration does not contain 'errors.code'
-		//or the code value exceeds the range, the current enum will be skipped
+		// or the code value exceeds the range, the current enum will be skipped
 		if enumCode > 600 || enumCode < 0 {
 			panic(fmt.Sprintf("Enum '%s' range must be greater than 0 and less than or equal to 600", string(v.Desc.Name())))
 		}
@@ -84,7 +83,7 @@ func genErrorsReason(gen *protogen.Plugin, file *protogen.File, g *protogen.Gene
 		err := &errorInfo{
 			Name:       string(enum.Desc.Name()),
 			Value:      string(v.Desc.Name()),
-			CamelValue: Case2Camel(string(v.Desc.Name())),
+			CamelValue: lo.CamelCase(string(v.Desc.Name())),
 			HttpCode:   enumCode,
 			Code:       int(v.Desc.Number()),
 			Msg:        enumMsg,
@@ -96,14 +95,4 @@ func genErrorsReason(gen *protogen.Plugin, file *protogen.File, g *protogen.Gene
 	}
 	g.P(ew.execute())
 	return false
-}
-
-func Case2Camel(name string) string {
-	if !strings.Contains(name, "_") {
-		return name
-	}
-	name = strings.ToLower(name)
-	name = strings.Replace(name, "_", " ", -1)
-	name = cases.Title(language.English).String(name)
-	return strings.Replace(name, " ", "", -1)
 }

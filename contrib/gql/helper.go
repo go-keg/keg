@@ -2,9 +2,10 @@ package gql
 
 import (
 	"context"
+	"reflect"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/samber/lo"
-	"reflect"
 )
 
 const (

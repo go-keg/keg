@@ -3,12 +3,13 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"github.com/IBM/sarama"
-	klog "github.com/go-kratos/kratos/v2/log"
 	"log"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/IBM/sarama"
+	klog "github.com/go-kratos/kratos/v2/log"
 )
 
 func TestNewConsumerGroup(t *testing.T) {

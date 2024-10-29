@@ -3,19 +3,20 @@ package log
 import (
 	"context"
 	"fmt"
+	"path"
+	"time"
+
 	"github.com/go-keg/keg/contrib/config"
 	"github.com/go-kratos/kratos/v2/log"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"path"
-	"time"
 )
 
 type KeyValue func() (string, log.Valuer)
 
 func ServiceInstanceID(val string) KeyValue {
 	return func() (string, log.Valuer) {
-		return "service.instance.id", func(ctx context.Context) interface{} {
+		return "service.instance.id", func(ctx context.Context) any {
 			return val
 		}
 	}
@@ -23,7 +24,7 @@ func ServiceInstanceID(val string) KeyValue {
 
 func DeploymentEnvironment(val string) KeyValue {
 	return func() (string, log.Valuer) {
-		return "environment", func(ctx context.Context) interface{} {
+		return "environment", func(ctx context.Context) any {
 			return val
 		}
 	}
@@ -31,7 +32,7 @@ func DeploymentEnvironment(val string) KeyValue {
 
 func ServiceName(val string) KeyValue {
 	return func() (string, log.Valuer) {
-		return "service.name", func(ctx context.Context) interface{} {
+		return "service.name", func(ctx context.Context) any {
 			return val
 		}
 	}
@@ -39,7 +40,7 @@ func ServiceName(val string) KeyValue {
 
 func ServiceVersion(val string) KeyValue {
 	return func() (string, log.Valuer) {
-		return "service.version", func(ctx context.Context) interface{} {
+		return "service.version", func(ctx context.Context) any {
 			return val
 		}
 	}
@@ -52,7 +53,7 @@ func NewLoggerFromConfig(conf config.Log, name string, keyValues ...KeyValue) lo
 		MaxAge:       time.Duration(conf.MaxAge) * time.Hour * 24,
 		RotationTime: time.Duration(conf.RotationTime) * time.Hour * 24,
 	}
-	var values []any
+	var values = make([]any, 0, len(keyValues)*2+2)
 	values = append(values, "ts", log.DefaultTimestamp)
 	values = append(values, "caller", log.DefaultCaller)
 	for _, keyValue := range keyValues {
@@ -86,7 +87,7 @@ type zapLogger struct {
 	logger *zap.Logger
 }
 
-func (l *zapLogger) Log(level log.Level, keyValues ...interface{}) error {
+func (l *zapLogger) Log(level log.Level, keyValues ...any) error {
 	if len(keyValues) == 0 || len(keyValues)%2 != 0 {
 		l.logger.Warn(fmt.Sprint("keyValues must appear in pairs: ", keyValues))
 		return nil

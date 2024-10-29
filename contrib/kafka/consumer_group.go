@@ -3,12 +3,14 @@ package kafka
 import (
 	"context"
 	"errors"
-	"github.com/IBM/sarama"
-	"github.com/go-keg/keg/contrib/config"
-	"github.com/go-kratos/kratos/v2/log"
 	"os"
 	"os/signal"
 	"strings"
+	"syscall"
+
+	"github.com/IBM/sarama"
+	"github.com/go-keg/keg/contrib/config"
+	"github.com/go-kratos/kratos/v2/log"
 )
 
 type ConsumerGroupOption func(cg *ConsumerGroup)
@@ -87,7 +89,12 @@ func NewConsumerGroup(brokers []string, group string, topics []string, opts ...C
 
 func NewConsumerGroupFromConfig(config config.Kafka, consumerGroup config.KafkaConsumerGroup, opts ...ConfigOption) *ConsumerGroup {
 	opts = append(opts, SetNetSASL(config.User, config.Password))
-	return NewConsumerGroup(config.GetAddr(), consumerGroup.GroupID, consumerGroup.Topics)
+	return NewConsumerGroup(
+		config.GetAddr(),
+		consumerGroup.GroupID,
+		consumerGroup.Topics,
+		SetConfigOptions(opts...),
+	)
 }
 
 func (r *ConsumerGroup) Setup(sess sarama.ConsumerGroupSession) error {
@@ -138,7 +145,7 @@ func (r *ConsumerGroup) Run(ctx context.Context, handler func(message *sarama.Co
 		}
 	}()
 
-	signal.Notify(r.sigterm, os.Interrupt, os.Kill)
+	signal.Notify(r.sigterm, os.Interrupt, syscall.SIGTERM)
 	select {
 	case <-ctx.Done():
 		r.run = false

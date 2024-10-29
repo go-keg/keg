@@ -2,6 +2,7 @@ package helper
 
 import (
 	"context"
+
 	"entgo.io/ent/dialect/sql"
 )
 
@@ -32,7 +33,7 @@ func Chunk[Q chunkImp[Q, T], T any](ctx context.Context, query Q, chunk int, fn 
 	if err != nil {
 		return err
 	}
-	for i := 0; i < count; i = i + chunk {
+	for i := 0; i < count; i += chunk {
 		items, err := query.Offset(i).Limit(chunk).All(ctx)
 		if err != nil {
 			return err

@@ -2,13 +2,14 @@ package metric
 
 import (
 	"context"
+	"time"
+
 	"github.com/go-kratos/kratos/v2/middleware/metrics"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"go.opentelemetry.io/otel/metric"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
-	"time"
 )
 
 var RequestsCounter metric.Int64Counter

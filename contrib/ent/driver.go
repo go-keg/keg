@@ -2,6 +2,8 @@ package ent
 
 import (
 	"database/sql"
+	"time"
+
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
 	"github.com/XSAM/otelsql"
@@ -9,7 +11,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	semconv "go.opentelemetry.io/otel/semconv/v1.25.0"
-	"time"
 )
 
 func NewDriver(cfg config.Database) (dialect.Driver, error) {

@@ -3,9 +3,10 @@ package template
 import (
 	"embed"
 	_ "embed"
+	"log"
+
 	"entgo.io/contrib/entgql"
 	"entgo.io/ent/entc/gen"
-	"log"
 )
 
 //go:embed *.tmpl

@@ -2,11 +2,12 @@ package log
 
 import (
 	"fmt"
+	"io"
+	"time"
+
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"io"
-	"time"
 )
 
 type ZapOptions struct {

@@ -1,9 +1,10 @@
 package sql
 
 import (
+	"fmt"
+
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqljson"
-	"fmt"
 )
 
 func In[T any](col string, items []T) *sql.Predicate {
@@ -67,12 +68,11 @@ func FulltextMatch(col string, v *string) *sql.Predicate {
 }
 
 func NotNull(col string, b *bool) *sql.Predicate {
-	if b != nil {
-		if *b {
-			return sql.NotNull(col)
-		} else {
-			return sql.IsNull(col)
-		}
+	if b == nil {
+		return nil
 	}
-	return nil
+	if *b {
+		return sql.NotNull(col)
+	}
+	return sql.IsNull(col)
 }

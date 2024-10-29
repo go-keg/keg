@@ -12,12 +12,6 @@ linters-settings: # https://golangci-lint.run/usage/configuration/#linters-setti
     checks: [ "-ST1000" ]
   gocyclo:
     min-complexity: 36
-  gci: # https://golangci-lint.run/usage/linters/#gci
-    sections:
-      - standard
-      - default
-      - localmodule
-    custom-order: true
   gosec:
     excludes:
       - G115 # Potential integer overflow when converting between integer types

@@ -2,6 +2,7 @@ package gql
 
 import (
 	"context"
+
 	"github.com/graph-gophers/dataloader"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"

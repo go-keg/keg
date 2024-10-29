@@ -3,8 +3,9 @@ package cache
 import (
 	"context"
 	"errors"
-	"github.com/patrickmn/go-cache"
 	"time"
+
+	"github.com/patrickmn/go-cache"
 )
 
 var (

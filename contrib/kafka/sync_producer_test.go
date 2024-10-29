@@ -2,10 +2,11 @@ package kafka
 
 import (
 	"fmt"
-	"github.com/IBM/sarama"
 	"log"
 	"strconv"
 	"testing"
+
+	"github.com/IBM/sarama"
 )
 
 func TestNewSyncProducer(t *testing.T) {

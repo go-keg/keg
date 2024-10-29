@@ -1,0 +1,8 @@
+package service
+{{/* gotype: github.com/go-keg/keg/cmd/codegen/new.Config */}}
+import (
+    "github.com/google/wire"{{if .UseGraphQL}}
+    "{{.GoModule}}/internal/app/{{.Service.KebabCase}}/service/graphql"{{end}}
+)
+
+var ProviderSet = wire.NewSet({{if .UseGraphQL}}graphql.NewSchema{{end}})

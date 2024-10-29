@@ -1,14 +1,15 @@
 package response
 
 import (
-	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	nethttp "net/http"
+	"strings"
+
+	"github.com/go-keg/keg/contrib/helpers"
 	"github.com/go-keg/keg/third_party/response"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/transport/http"
-	nethttp "net/http"
-	"strings"
 )
 
 type ErrorEncoderOption func(resp *response.Response, err error) *response.Response
@@ -16,8 +17,7 @@ type ErrorEncoderOption func(resp *response.Response, err error) *response.Respo
 var replacer = strings.NewReplacer(" ", "0", "O", "0", "I", "1")
 
 func Err2HashCode(err error) string {
-	msg := err.Error()
-	h := md5.Sum([]byte(msg))
+	h := helpers.HashWithMD5(err.Error())
 	code := strings.ToUpper(fmt.Sprintf("%x", h)[0:4])
 	replacer.Replace(code)
 	return code
@@ -52,7 +52,7 @@ func ErrorEncoder(opts ...ErrorEncoderOption) http.EncodeErrorFunc {
 }
 
 func Encoder() http.EncodeResponseFunc {
-	return func(w nethttp.ResponseWriter, r *nethttp.Request, v interface{}) error {
+	return func(w nethttp.ResponseWriter, r *nethttp.Request, v any) error {
 		codec, _ := http.CodecForRequest(r, "Accept")
 		data, err := codec.Marshal(v)
 		if err != nil {

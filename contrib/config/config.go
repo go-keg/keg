@@ -2,10 +2,11 @@ package config
 
 import (
 	"fmt"
-	"github.com/joho/godotenv"
-	"github.com/spf13/viper"
 	"os"
 	"strings"
+
+	"github.com/joho/godotenv"
+	"github.com/spf13/viper"
 )
 
 func Load[T any](path string) (*T, error) {
@@ -37,7 +38,7 @@ func LoadEnv(filenames ...string) {
 }
 
 func replaceEnvVariables(text []byte) string {
-	var words []string
+	var words = make([]string, 0, len(os.Environ())*2)
 	for _, env := range os.Environ() {
 		envPair := strings.SplitN(env, "=", 2)
 		words = append(words, fmt.Sprintf("${%s}", envPair[0]), envPair[1])
