@@ -34,12 +34,24 @@ func ToInts(keys dataloader.Keys) []int {
 	})
 }
 
-func ToAnySlice(keys dataloader.Keys) []any {
-	return lo.Map(keys, func(item dataloader.Key, index int) any {
-		return cast.ToInt(item.String())
-	})
-}
-
 func ToStringKey(id any) dataloader.Key {
 	return dataloader.StringKey(cast.ToString(id))
+}
+
+func FillDefault(keys dataloader.Keys, result map[dataloader.Key]any, value any) map[dataloader.Key]any {
+	for _, key := range keys {
+		if _, ok := result[key]; !ok {
+			result[key] = value
+		}
+	}
+	return result
+}
+
+func FillDefaultByKey(keys dataloader.Keys, result map[dataloader.Key]any, fn func(dataloader.Key) any) map[dataloader.Key]any {
+	for _, key := range keys {
+		if _, ok := result[key]; !ok {
+			result[key] = fn(key)
+		}
+	}
+	return result
 }

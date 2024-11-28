@@ -18,7 +18,7 @@ func HashError(ctx context.Context, _ any, next graphql.Resolver) (res interface
 	code := response.Err2HashCode(err)
 	return res, &gqlerror.Error{
 		Err:     err,
-		Message: fmt.Sprintf("Unknown error, error code is: %s, if you need assistance, please contact %s", code, "support@zbanx.com"),
+		Message: fmt.Sprintf("Unknown error, error code is: %s, if you need assistance, please contact administrator", code),
 		Path:    graphql.GetPath(ctx),
 	}
 }
