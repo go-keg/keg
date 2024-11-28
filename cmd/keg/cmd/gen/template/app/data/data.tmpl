@@ -1,0 +1,31 @@
+package data
+{{/* gotype: github.com/go-keg/keg/cmd/keg/config.App */}}
+import (
+    _ "github.com/go-sql-driver/mysql"
+    "github.com/google/wire"
+    "github.com/go-keg/keg/contrib/database"
+    "{{.GoModule}}/internal/app/{{.Name.KebabCase}}/conf"
+    "{{.GoModule}}/internal/data/{{.DB.KebabCase}}/ent"
+    _ "{{.GoModule}}/internal/data/{{.DB.KebabCase}}/ent/runtime"
+)
+
+var ProviderSet = wire.NewSet(
+    NewEntClient,
+    NewEntDB,
+)
+
+func NewEntClient(cfg *conf.{{.Name.PascalCase}}) (*ent.Client, error) {
+    drv, err := database.NewEntDriver(cfg.Data.Database)
+    if err != nil {
+        return nil, err
+    }
+    return ent.NewClient(ent.Driver(drv)), nil
+}
+
+func NewEntDB(cfg *conf.{{.Name.PascalCase}}) (*ent.Database, error) {
+    drv, err := database.NewEntDriver(cfg.Data.Database)
+    if err != nil {
+        return nil, err
+    }
+    return ent.NewDatabase(ent.Driver(drv)), nil
+}

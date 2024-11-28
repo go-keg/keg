@@ -1,0 +1,38 @@
+package schedule
+{{/* gotype: github.com/go-keg/keg/cmd/keg/config.App */}}
+import (
+    "context"
+    "fmt"
+    "github.com/go-kratos/kratos/v2/log"
+    "github.com/google/wire"
+    "{{.GoModule}}/internal/data/{{.DB.KebabCase}}/ent"
+    "{{.GoModule}}/internal/pkg/app"
+)
+
+var ProviderSet = wire.NewSet(NewSchedule)
+
+type Schedule struct {
+    *app.Schedule
+    ent *ent.Client
+}
+
+func NewSchedule(logger log.Logger, ent *ent.Client) *Schedule {
+    s := app.NewSchedule(logger)
+    return &Schedule{Schedule: s, ent: ent}
+}
+
+func (s Schedule) Start(ctx context.Context) error {
+    _, _ = s.Add("example", "* * * * *", func() error {
+        return s.example(ctx)
+    })
+    return s.Schedule.Start()
+}
+
+func (s Schedule) Stop(ctx context.Context) error {
+    return s.Schedule.Stop()
+}
+
+func (s Schedule) example(ctx context.Context) error {
+    fmt.Println("todo")
+    return nil
+}

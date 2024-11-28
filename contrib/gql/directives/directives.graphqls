@@ -1,0 +1,8 @@
+"""接口缓存"""
+directive @cache(duration: Duration!) on FIELD_DEFINITION
+
+"""对错误信息进行Hash处理"""
+directive @hashError on FIELD_DEFINITION
+
+"""输入验证"""
+directive @validate(pattern: String!, message: String) on ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION

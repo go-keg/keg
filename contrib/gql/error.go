@@ -60,6 +60,10 @@ func Error(message string, opts ...ErrOption) *gqlerror.Error {
 	}
 }
 
+func ValidateError(message string) *gqlerror.Error {
+	return Error(message, WithErrCode("ErrValidate"))
+}
+
 func ErrorPresenter(logger log.Logger) func(ctx context.Context, err error) *gqlerror.Error {
 	return func(ctx context.Context, err error) *gqlerror.Error {
 		var gqlErr *gqlerror.Error
