@@ -3,30 +3,19 @@ package response
 import (
 	"encoding/json"
 	"fmt"
-	nethttp "net/http"
-	"strings"
-
-	"github.com/go-keg/keg/contrib/helpers"
+	"github.com/go-keg/keg/contrib/errors"
 	"github.com/go-keg/keg/third_party/response"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/transport/http"
+	nethttp "net/http"
 )
 
 type ErrorEncoderOption func(resp *response.Response, err error) *response.Response
 
-var replacer = strings.NewReplacer(" ", "0", "O", "0", "I", "1")
-
-func Err2HashCode(err error) string {
-	h := helpers.HashWithMD5(err.Error())
-	code := strings.ToUpper(fmt.Sprintf("%x", h)[0:4])
-	replacer.Replace(code)
-	return code
-}
-
 func HashUnknownError(logger log.Logger) ErrorEncoderOption {
 	return func(resp *response.Response, err error) *response.Response {
 		if resp.GetCode() == response.UnknownCode {
-			code := Err2HashCode(err)
+			code := errors.Err2HashCode(err)
 			_ = logger.Log(log.LevelError, "code", code, "msg", err)
 			resp.Message = fmt.Sprintf("Unknown error, error code is: %s, if you need assistance, please contact the administrator", code)
 			resp = resp.WithMetadata(map[string]string{

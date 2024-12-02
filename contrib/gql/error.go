@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
+	errors2 "github.com/go-keg/keg/contrib/errors"
 	zlog "github.com/go-keg/keg/contrib/log"
-	"github.com/go-keg/keg/contrib/response"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
@@ -70,7 +70,7 @@ func ErrorPresenter(logger log.Logger) func(ctx context.Context, err error) *gql
 		if errors.As(err, &gqlErr) && gqlErr.Err == nil {
 			return gqlErr
 		}
-		code := response.Err2HashCode(err)
+		code := errors2.Err2HashCode(err)
 		_ = logger.Log(log.LevelError,
 			"module", "graphql/errors",
 			"traceId", zlog.TraceID(),
