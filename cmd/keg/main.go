@@ -24,6 +24,7 @@ var version = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(image.Cmd, k8s.Cmd, gen.Cmd, initCmd.Cmd, version)
+	rootCmd.PersistentFlags().StringP("conf", "c", internal.ConfigFile, "keg config file")
 }
 
 func main() {

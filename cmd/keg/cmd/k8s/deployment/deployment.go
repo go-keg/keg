@@ -14,6 +14,18 @@ import (
 
 var Cmd = &cobra.Command{
 	Use: "deployment",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		confPath, _ := cmd.Flags().GetString("conf")
+		viper.SetConfigFile(confPath)
+		err := viper.ReadInConfig()
+		if err != nil {
+			log.Fatalf("fatal error config file: %v", err)
+		}
+		err = viper.Unmarshal(&cfg)
+		if err != nil {
+			panic(err)
+		}
+	},
 }
 
 var cfg config.Config
@@ -22,16 +34,6 @@ var name string
 func init() {
 	Cmd.AddCommand(updateImageCmd)
 	Cmd.PersistentFlags().StringVarP(&name, "name", "n", "", "")
-	confPath, _ := Cmd.Flags().GetString("conf")
-	viper.SetConfigFile(confPath)
-	err := viper.ReadInConfig() // Find and read the config file
-	if err != nil {             // Handle errors reading the config file
-		log.Fatalf("fatal error config file: %v", err)
-	}
-	err = viper.Unmarshal(&cfg)
-	if err != nil {
-		panic(err)
-	}
 }
 
 type Deployments struct {

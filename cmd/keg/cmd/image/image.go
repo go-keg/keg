@@ -10,19 +10,11 @@ import (
 	_ "github.com/spf13/viper"
 )
 
-var Cmd = &cobra.Command{Use: "image"}
-
-var cfg config.Config
-var confPath, name, tag string
-
-func init() {
-	Cmd.AddCommand(tagCmd)
-	Cmd.PersistentFlags().StringVarP(&name, "name", "n", "", "")
-	Cmd.PersistentFlags().StringVarP(&confPath, "config", "c", "./.deploy.yaml", "")
-
+var Cmd = &cobra.Command{Use: "image", PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	confPath, _ := cmd.Flags().GetString("conf")
 	viper.SetConfigFile(confPath)
-	err := viper.ReadInConfig() // Find and read the config file
-	if err != nil {             // Handle errors reading the config file
+	err := viper.ReadInConfig()
+	if err != nil {
 		log.Fatalf("fatal error config file: %v", err)
 	}
 	err = viper.Unmarshal(&cfg)
@@ -33,4 +25,12 @@ func init() {
 	if err != nil {
 		log.Fatalf("fatal error config file: %v", err)
 	}
+}}
+
+var cfg config.Config
+var name, tag string
+
+func init() {
+	Cmd.AddCommand(tagCmd)
+	Cmd.PersistentFlags().StringVarP(&name, "name", "n", "", "")
 }

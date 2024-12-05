@@ -13,7 +13,7 @@ import (
 
 var updateImageCmd = &cobra.Command{
 	Use:     "update-image",
-	Example: "keg-deploy k8s deployment update-image -n account-interface -c ./y-deploy.yaml",
+	Example: "keg-deploy k8s deployment update-image -n account-interface",
 	Run: func(cmd *cobra.Command, args []string) {
 		branch, err := utils.GetBranch()
 		if err != nil {
@@ -29,6 +29,6 @@ var updateImageCmd = &cobra.Command{
 
 		ts := time.Now().Unix() * 1000
 		deploy.Patch(types.StrategicMergePatchType, []byte(fmt.Sprintf(`{"spec":{"template":{"metadata":{"annotations":{"redeploy-timestamp":"%d"}},"spec":{"containers":[{"name":"%s","image":"%s"}]}}}}`, ts, deploy.Name, image)))
-		fmt.Printf(`updateImage: {"namespace":"%s", "redeploy.timestamp":%d, "name":"%s", "image":"%s"}`, deploy.Namespace, ts, deploy.Name, image)
+		fmt.Printf("updateImage namespace: %s redeploy.timestamp: %d name: %s image: %s\n", deploy.Namespace, ts, deploy.Name, image)
 	},
 }
