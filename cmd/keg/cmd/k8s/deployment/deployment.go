@@ -2,12 +2,9 @@ package deployment
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"time"
 
 	"github.com/go-keg/keg/cmd/keg/cmd/config"
-	"github.com/go-keg/keg/cmd/keg/cmd/k8s/pkg"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -49,18 +46,8 @@ func NewDeployments(namespace string, name string, clientset *kubernetes.Clients
 
 func (d Deployments) Patch(patchType types.PatchType, data []byte) {
 	ctx := context.Background()
-	patch, err := d.clientset.AppsV1().Deployments(d.Namespace).Patch(ctx, d.Name, patchType, data, v1.PatchOptions{})
+	_, err := d.clientset.AppsV1().Deployments(d.Namespace).Patch(ctx, d.Name, patchType, data, v1.PatchOptions{})
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("patch:", patch.Namespace, patch.Name)
-	fmt.Println("data:", string(data))
-}
-
-func (d Deployments) UpdateImage(image string) {
-	ops := pkg.Ops{
-		{Op: "replace", Path: "/spec/template/spec/containers/0/image", Value: image},
-		{Op: "replace", Path: "/spec/template/metadata/annotations/redeploy-timestamp", Value: fmt.Sprintf("%d", time.Now().Unix()*1000)},
-	}
-	d.Patch(types.JSONPatchType, ops.JSON())
 }

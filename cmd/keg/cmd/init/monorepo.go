@@ -2,14 +2,15 @@ package init
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/go-keg/keg/cmd/keg/config"
 	"github.com/go-keg/keg/cmd/keg/internal"
 	"github.com/go-keg/keg/cmd/keg/utils"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	yaml3 "gopkg.in/yaml.v3"
-	"os"
-	"path/filepath"
 )
 
 var Cmd = &cobra.Command{

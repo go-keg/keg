@@ -24,7 +24,6 @@ func Validate(ctx context.Context, obj any, next graphql.Resolver, pattern strin
 				return nil, gql.ValidateError(*message)
 			}
 			return nil, gql.ValidateError("validate failed")
-
 		}
 		return nil, fmt.Errorf("unable to cast obj to map[string]interface{}")
 	}

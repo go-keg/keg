@@ -3,10 +3,12 @@ package deployment
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/go-keg/keg/cmd/keg/cmd/k8s/pkg"
 	"github.com/go-keg/keg/cmd/keg/cmd/utils"
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 var updateImageCmd = &cobra.Command{
@@ -24,6 +26,9 @@ var updateImageCmd = &cobra.Command{
 			log.Fatalf("get tag err: %v", err)
 		}
 		image := fmt.Sprintf("%s/%s", cfg.ImageRegistry, name+tag)
-		deploy.UpdateImage(image)
+
+		ts := time.Now().Unix() * 1000
+		deploy.Patch(types.StrategicMergePatchType, []byte(fmt.Sprintf(`{"spec":{"template":{"metadata":{"annotations":{"redeploy-timestamp":"%d"}},"spec":{"containers":[{"name":"%s","image":"%s"}]}}}}`, ts, deploy.Name, image)))
+		fmt.Printf(`updateImage: {"namespace":"%s", "redeploy.timestamp":%d, "name":"%s", "image":"%s"}`, deploy.Namespace, ts, deploy.Name, image)
 	},
 }

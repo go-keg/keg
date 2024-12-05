@@ -150,7 +150,7 @@ func (r Config) GetTag() (string, error) {
 		return "", err
 	}
 	tagTypes := map[TagPolicy]string{
-		TagPolicyVersion:       fmt.Sprintf("%s", version),
+		TagPolicyVersion:       version,
 		TagPolicyBranch:        fmt.Sprintf("latest-%s", branch),
 		TagPolicyVersionBranch: fmt.Sprintf("%s-%s", version, branch),
 	}

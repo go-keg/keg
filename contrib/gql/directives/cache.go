@@ -5,12 +5,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/go-keg/keg/contrib/cache"
-	"time"
 )
 
-func Cache(ctx context.Context, _ any, next graphql.Resolver, duration string) (res interface{}, err error) {
+func Cache(ctx context.Context, _ any, next graphql.Resolver, duration string) (res any, err error) {
 	field := graphql.GetFieldContext(ctx)
 	marshal, err := json.Marshal(field.Args)
 	if err != nil {

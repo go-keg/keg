@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/go-keg/keg/cmd/keg/cmd/gen"
 	"github.com/go-keg/keg/cmd/keg/cmd/image"
 	initCmd "github.com/go-keg/keg/cmd/keg/cmd/init"
 	"github.com/go-keg/keg/cmd/keg/cmd/k8s"
+	"github.com/go-keg/keg/cmd/keg/internal"
 	"github.com/spf13/cobra"
 )
-
-const VERSION = "0.0.1"
 
 var rootCmd = &cobra.Command{
 	Use: "keg",
@@ -18,7 +18,7 @@ var rootCmd = &cobra.Command{
 var version = &cobra.Command{
 	Use: "version",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(VERSION)
+		fmt.Println(internal.Version)
 	},
 }
 

@@ -3,13 +3,14 @@ package utils
 import (
 	"bufio"
 	"fmt"
-	"github.com/go-keg/keg/cmd/keg/internal"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/go-keg/keg/cmd/keg/internal"
 )
 
 func GetBranch() (string, error) {
