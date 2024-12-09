@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	FieldCount = "count"
-	FieldItems = "items"
+	fieldCount = "count"
+	fieldItems = "items"
 )
 
 func OffsetLimit(page *int, size *int) (offset int, limit int) {
@@ -28,6 +28,16 @@ func OffsetLimit(page *int, size *int) (offset int, limit int) {
 // ContainsField 包含字段
 func ContainsField(ctx context.Context, field string) bool {
 	return lo.Contains(graphql.CollectAllFields(ctx), field)
+}
+
+// ContainsCountField 包含 count 字段
+func ContainsCountField(ctx context.Context) bool {
+	return ContainsField(ctx, fieldCount)
+}
+
+// ContainsItemsField 包含 items 字段
+func ContainsItemsField(ctx context.Context) bool {
+	return ContainsField(ctx, fieldItems)
 }
 
 // SomeFields 包含任意字段
