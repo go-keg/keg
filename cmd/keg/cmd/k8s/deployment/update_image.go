@@ -13,7 +13,7 @@ import (
 
 var updateImageCmd = &cobra.Command{
 	Use:     "update-image",
-	Example: "keg-deploy k8s deployment update-image -n account-interface",
+	Example: "keg k8s deployment update-image -n account-interface",
 	Run: func(cmd *cobra.Command, args []string) {
 		branch, err := utils.GetBranch()
 		if err != nil {

@@ -19,21 +19,25 @@ func init() {
 	configCmd.Flags().StringVarP(&outDir, "outDir", "o", "./deploy/kubernetes/output/", "")
 }
 
-var configCmd = &cobra.Command{Use: "config", Run: func(cmd *cobra.Command, args []string) {
-	file, _ := os.OpenFile(".env.k8s", os.O_RDONLY, 0666)
-	envs, err := godotenv.Parse(file)
-	if err != nil {
-		panic(err)
-	}
-	service := &Temp{
-		Path:   "./deploy/kubernetes",
-		Envs:   envs,
-		Output: outDir,
-	}
+var configCmd = &cobra.Command{
+	Use:     "config",
+	Example: "keg k8s gen config -n dev",
+	Run: func(cmd *cobra.Command, args []string) {
+		file, _ := os.OpenFile(".env.k8s", os.O_RDONLY, 0666)
+		envs, err := godotenv.Parse(file)
+		if err != nil {
+			panic(err)
+		}
+		service := &Temp{
+			Path:   "./deploy/kubernetes",
+			Envs:   envs,
+			Output: outDir,
+		}
 
-	service.Read(service.Path)
-	log.Println("configure files generated.")
-}}
+		service.Read(service.Path)
+		log.Println("configure files generated.")
+	},
+}
 
 type Temp struct {
 	Path   string
