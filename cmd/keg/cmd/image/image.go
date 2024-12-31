@@ -28,9 +28,8 @@ var Cmd = &cobra.Command{Use: "image", PersistentPreRun: func(cmd *cobra.Command
 }}
 
 var cfg config.Config
-var name, tag string
+var tag string
 
 func init() {
 	Cmd.AddCommand(tagCmd)
-	Cmd.PersistentFlags().StringVarP(&name, "name", "n", "", "")
 }

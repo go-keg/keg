@@ -6,11 +6,24 @@ import (
 	"strings"
 
 	"github.com/joho/godotenv"
+	"github.com/samber/lo"
 	"github.com/spf13/viper"
 )
 
-func Load[T any](path string) (*T, error) {
-	_ = godotenv.Load(".env")
+func Load[T any](path string, envs ...string) (*T, error) {
+	envs = lo.FilterMap(envs, func(item string, index int) (string, bool) {
+		if item == "" {
+			return "", false
+		}
+		if !strings.HasPrefix(item, ".env.") {
+			item = ".env." + item
+		}
+		return item, true
+	})
+	if len(envs) == 0 {
+		envs = append(envs, ".env")
+	}
+	_ = godotenv.Load(envs...)
 	readFile, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err

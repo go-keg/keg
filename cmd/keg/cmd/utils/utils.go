@@ -57,9 +57,9 @@ func GetTag(cfg config.Config) (string, error) {
 		return "", err
 	}
 	tagTypes := map[config.TagPolicy]string{
-		config.TagPolicyVersion:       fmt.Sprintf(":%s", version),
-		config.TagPolicyBranch:        fmt.Sprintf(":latest-%s", branch),
-		config.TagPolicyVersionBranch: fmt.Sprintf(":%s-%s", version, branch),
+		config.TagPolicyVersion:       version,
+		config.TagPolicyBranch:        fmt.Sprintf("latest-%s", branch),
+		config.TagPolicyVersionBranch: fmt.Sprintf("%s-%s", version, branch),
 	}
 	b := cfg.GetBranch(branch)
 	return tagTypes[b.TagPolicy], nil
