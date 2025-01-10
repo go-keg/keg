@@ -1,15 +1,15 @@
-package sql
+package filter
 
 import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/samber/lo"
 )
 
-type Where struct {
+type Filter struct {
 	ws []*sql.Predicate
 }
 
-func (w *Where) Append(p ...*sql.Predicate) {
+func (w *Filter) Append(p ...*sql.Predicate) {
 	s := lo.Filter(p, func(item *sql.Predicate, index int) bool {
 		return item != nil
 	})
@@ -18,7 +18,7 @@ func (w *Where) Append(p ...*sql.Predicate) {
 	}
 }
 
-func (w *Where) AppendOr(p ...*sql.Predicate) {
+func (w *Filter) AppendOr(p ...*sql.Predicate) {
 	s := lo.Filter(p, func(item *sql.Predicate, index int) bool {
 		return item != nil
 	})
@@ -27,7 +27,7 @@ func (w *Where) AppendOr(p ...*sql.Predicate) {
 	}
 }
 
-func (w *Where) Predicate() *sql.Predicate {
+func (w *Filter) Predicate() *sql.Predicate {
 	if len(w.ws) > 0 {
 		return sql.And(w.ws...)
 	}

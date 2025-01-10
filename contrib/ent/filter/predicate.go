@@ -1,21 +1,18 @@
-package sql
+package filter
 
 import (
 	"fmt"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqljson"
+	"github.com/samber/lo"
 )
 
 func In[T any](col string, items []T) *sql.Predicate {
 	if len(items) == 1 {
 		return sql.EQ(col, items[0])
 	} else if len(items) > 1 {
-		var result = make([]any, len(items))
-		for i, item := range items {
-			result[i] = item
-		}
-		return sql.In(col, result...)
+		return sql.In(col, lo.ToAnySlice(items)...)
 	}
 	return nil
 }
@@ -33,7 +30,7 @@ func NotIn[T any](col string, items []T) *sql.Predicate {
 	return nil
 }
 
-func JsonValueContains[T any](col string, items []T) *sql.Predicate {
+func JSONValueContains[T any](col string, items []T) *sql.Predicate {
 	if len(items) > 0 {
 		var ws []*sql.Predicate
 		for _, item := range items {
@@ -45,11 +42,10 @@ func JsonValueContains[T any](col string, items []T) *sql.Predicate {
 }
 
 func EQ[T any](col string, v *T) *sql.Predicate {
-	var t *T
-	if v != t {
-		return sql.EQ(col, v)
+	if v == nil {
+		return nil
 	}
-	return nil
+	return sql.EQ(col, *v)
 }
 
 func Contains(col string, v *string) *sql.Predicate {
@@ -75,4 +71,14 @@ func NotNull(col string, b *bool) *sql.Predicate {
 		return sql.NotNull(col)
 	}
 	return sql.IsNull(col)
+}
+
+func IsNull(col string, b *bool) *sql.Predicate {
+	if b == nil {
+		return nil
+	}
+	if *b {
+		return sql.IsNull(col)
+	}
+	return sql.NotNull(col)
 }
