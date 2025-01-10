@@ -14,7 +14,7 @@ go get github.com/go-keg/keg
 
 #### Install
 ```bash
-go install github.com/go-keg/cmd/keg@latest 
+go install github.com/go-keg/keg/cmd/keg@latest
 ```
 
 ## 🎯 Features
