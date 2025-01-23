@@ -1,0 +1,81 @@
+{{/*
+Copyright 2019-present Facebook Inc. All rights reserved.
+This source code is licensed under the Apache 2.0 license found
+in the LICENSE file in the root directory of this source tree.
+*/}}
+
+{{/* gotype: entgo.io/ent/entc/gen.Graph */}}
+
+{{ define "gql_list" }}
+{{ template "header" $ }}
+
+{{ template "import" $ }}
+
+import (
+    "github.com/99designs/gqlgen/graphql"
+    "golang.org/x/exp/slices"
+    "context"
+)
+
+{{ $gqlNodes := filterNodes $.Nodes (skipMode "type") }}
+{{ range $node := $gqlNodes }}
+
+{{ $receiver := $node.Receiver }}
+{{ $query := $node.QueryName }}
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func ({{ $receiver }} *{{ $query }}) CustomCollectFields(ctx context.Context, path ...string) (*{{ $query }}, error) {
+    fc := graphql.GetFieldContext(ctx)
+    if fc == nil {
+        return {{ $receiver }}, nil
+    }
+    if field := collectedField(ctx, path...); field != nil {
+        if err := {{ $receiver }}.collectField(ctx, true, graphql.GetOperationContext(ctx), *field, path); err != nil {
+            return nil, err
+        }
+    }
+    return {{ $receiver }}, nil
+}
+
+{{ $names := nodePaginationNames $node -}}
+{{ $opt := print $names.Node "PaginateOption" }}
+{{ $conn := $names.Connection }}
+{{ $newPager := print "new" $names.Node "Pager" }}
+// List executes the query and returns totalCount and nodes []*{{ $node.Name }}.
+func ({{ $receiver }} *{{ $query }}) List(ctx context.Context, offset, limit int, opts ...{{ $opt }}) (*{{ $conn }}, error) {
+	pager, err := {{ $newPager }}(opts, false)
+	if err != nil {
+		return nil, err
+	}
+	if _, err = pager.applyFilter({{ $receiver }}); err != nil {
+		return nil, err
+	}
+	conn := &{{ $conn }}{}
+	ignoredNodes := !hasCollectedField(ctx, nodesField)
+	if hasCollectedField(ctx, totalCountField) {
+		hasPagination := limit != 0
+		if hasPagination || ignoredNodes {
+			c := {{ $receiver }}.Clone()
+			c.ctx.Fields = nil
+			if conn.TotalCount, err = c.Count(ctx); err != nil {
+				return nil, err
+			}
+		}
+	}
+	if ignoredNodes || (limit == 0) {
+		return conn, nil
+	}
+	{{ $receiver }}.Offset(offset).Limit(limit)
+	if field := collectedField(ctx, nodesField); field != nil {
+		if err = {{ $receiver }}.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{nodesField}); err != nil {
+			return nil, err
+		}
+	}
+	conn.Nodes, err = pager.applyOrder({{ $receiver }}).All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
+{{ end }}
+{{ end }}
