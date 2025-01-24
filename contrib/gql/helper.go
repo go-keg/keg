@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	fieldCount = "count"
-	fieldItems = "items"
+	FieldCount = "count"
+	FieldItems = "items"
 )
 
 func OffsetLimit(page *int, size *int) (offset int, limit int) {
@@ -32,12 +32,12 @@ func ContainsField(ctx context.Context, field string) bool {
 
 // ContainsCountField 包含 count 字段
 func ContainsCountField(ctx context.Context) bool {
-	return ContainsField(ctx, fieldCount)
+	return ContainsField(ctx, FieldCount)
 }
 
 // ContainsItemsField 包含 items 字段
 func ContainsItemsField(ctx context.Context) bool {
-	return ContainsField(ctx, fieldItems)
+	return ContainsField(ctx, FieldItems)
 }
 
 // SomeFields 包含任意字段
