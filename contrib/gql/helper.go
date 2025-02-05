@@ -13,14 +13,56 @@ const (
 	FieldItems = "items"
 )
 
-func OffsetLimit(page *int, size *int) (offset int, limit int) {
+type pageOption struct {
+	defaultSize int
+	maxSize     int
+	maxItems    int
+}
+
+type PageOption func(*pageOption)
+
+func WithDefaultSize(defaultSize int) PageOption {
+	return func(opt *pageOption) {
+		opt.defaultSize = defaultSize
+	}
+}
+
+func WithMaxSize(maxSize int) PageOption {
+	return func(opt *pageOption) {
+		opt.maxSize = maxSize
+	}
+}
+
+func WithMaxItems(maxItems int) PageOption {
+	return func(opt *pageOption) {
+		opt.maxItems = maxItems
+	}
+}
+
+func OffsetLimit(page *int, size *int, opts ...PageOption) (offset int, limit int) {
+	v := pageOption{
+		defaultSize: 10,
+		maxSize:     1000,
+		maxItems:    0,
+	}
+	for _, opt := range opts {
+		opt(&v)
+	}
+	limit = v.defaultSize
 	if size != nil && *size > 0 {
 		limit = *size
-	} else {
-		limit = 10
+	}
+	if v.maxSize != 0 && limit > v.maxSize {
+		limit = v.maxSize
 	}
 	if page != nil && *page > 1 {
 		offset = (*page - 1) * limit
+	}
+	if v.maxItems != 0 && offset+limit > v.maxItems {
+		limit = v.maxItems - offset
+		if limit < 0 {
+			limit = 0
+		}
 	}
 	return
 }
