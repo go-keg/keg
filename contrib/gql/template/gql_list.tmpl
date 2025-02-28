@@ -50,7 +50,7 @@ func ({{ $receiver }} *{{ $query }}) List(ctx context.Context, offset, limit int
 		return nil, err
 	}
 	conn := &{{ $conn }}{}
-	ignoredNodes := !hasCollectedField(ctx, nodesField)
+	ignoredNodes := !hasCollectedField(ctx, edgesField, nodeField) && !hasCollectedField(ctx, nodesField)
 	if hasCollectedField(ctx, totalCountField) {
 		hasPagination := limit != 0
 		if hasPagination || ignoredNodes {
@@ -67,6 +67,11 @@ func ({{ $receiver }} *{{ $query }}) List(ctx context.Context, offset, limit int
 	{{ $receiver }}.Offset(offset).Limit(limit)
 	if field := collectedField(ctx, nodesField); field != nil {
 		if err = {{ $receiver }}.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{nodesField}); err != nil {
+			return nil, err
+		}
+	}
+	if field := collectedField(ctx, edgesField, nodeField); field != nil {
+		if err := {{ $receiver }}.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
 			return nil, err
 		}
 	}
