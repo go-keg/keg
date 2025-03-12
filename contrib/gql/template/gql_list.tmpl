@@ -36,6 +36,24 @@ func ({{ $receiver }} *{{ $query }}) CustomCollectFields(ctx context.Context, pa
     return {{ $receiver }}, nil
 }
 
+// AllCollectFields
+func ({{ $receiver }} *{{ $query }}) AllCollectFields(ctx context.Context, path ...string) ([]*{{ $node.Name }}, error) {
+	_query, err := {{ $receiver }}.CustomCollectFields(ctx, path...)
+	if err != nil {
+		return nil, err
+	}
+	return _query.All(ctx)
+}
+
+// FirstCollectFields
+func ({{ $receiver }} *{{ $query }}) FirstCollectFields(ctx context.Context, path ...string) (*{{ $node.Name }}, error) {
+	_query, err := {{ $receiver }}.CustomCollectFields(ctx, path...)
+	if err != nil {
+		return nil, err
+	}
+	return _query.First(ctx)
+}
+
 {{ $names := nodePaginationNames $node -}}
 {{ $opt := print $names.Node "PaginateOption" }}
 {{ $conn := $names.Connection }}

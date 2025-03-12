@@ -33,11 +33,17 @@ func (TimeMixin) Fields() []ent.Field {
 			Optional().
 			Immutable().
 			Default(time.Now).
-			Annotations(entgql.Skip(entgql.SkipMutationCreateInput|entgql.SkipMutationUpdateInput), entgql.OrderField("created_at")),
+			Annotations(
+				entgql.Skip(entgql.SkipMutationCreateInput|entgql.SkipMutationUpdateInput),
+				entgql.OrderField("createdAt"),
+			),
 		field.Time("updated_at").
 			Optional().
 			Default(time.Now).
 			UpdateDefault(time.Now).
-			Annotations(entgql.Skip(entgql.SkipMutationCreateInput|entgql.SkipMutationUpdateInput), entgql.OrderField("updated_at")),
+			Annotations(
+				entgql.Skip(entgql.SkipMutationCreateInput|entgql.SkipMutationUpdateInput),
+				entgql.OrderField("updatedAt"),
+			),
 	}
 }
