@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -54,7 +55,7 @@ func replaceEnvVariables(text []byte) string {
 	var words = make([]string, 0, len(os.Environ())*2)
 	for _, env := range os.Environ() {
 		envPair := strings.SplitN(env, "=", 2)
-		words = append(words, fmt.Sprintf("${%s}", envPair[0]), envPair[1])
+		words = append(words, fmt.Sprintf("${%s}", envPair[0]), strconv.Quote(envPair[1]))
 	}
 	return strings.NewReplacer(words...).Replace(string(text))
 }
