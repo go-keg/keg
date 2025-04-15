@@ -23,7 +23,7 @@ var configCmd = &cobra.Command{
 	Use:     "config",
 	Example: "keg k8s gen config -n dev",
 	Run: func(cmd *cobra.Command, args []string) {
-		file, _ := os.OpenFile(".env.k8s", os.O_RDONLY, 0666)
+		file, _ := os.OpenFile(".env", os.O_RDONLY, 0666)
 		envs, err := godotenv.Parse(file)
 		if err != nil {
 			panic(err)
@@ -46,7 +46,7 @@ type Temp struct {
 }
 
 func (c Temp) Read(dir string) {
-	var items = make([]string, 0, len(c.Envs)+2)
+	var items = make([]string, 0, len(c.Envs)*2+2)
 	items = append(items, "${NAMESPACE}", namespace)
 	for key, val := range c.Envs {
 		items = append(items, "${"+key+"}", val)
