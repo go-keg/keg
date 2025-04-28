@@ -1,6 +1,7 @@
 package mixin
 
 import (
+	"strings"
 	"time"
 
 	"entgo.io/contrib/entgql"
@@ -8,6 +9,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"entgo.io/ent/schema/mixin"
+	"github.com/samber/lo"
 )
 
 // -------------------------------------------------
@@ -19,7 +21,18 @@ type TimeMixin struct {
 	// We embed the `mixin.Schema` to avoid
 	// implementing the rest of the methods.
 	mixin.Schema
+	// SortFieldCaseStyle default value is NamingStyleSnakeCase
+	SortFieldCaseStyle SortFieldCaseStyle
 }
+
+type SortFieldCaseStyle string
+
+const (
+	NamingStylePascalCase SortFieldCaseStyle = "PascalCase"
+	NamingStyleCamelCase  SortFieldCaseStyle = "camelCase"
+	NamingStyleSnakeCase  SortFieldCaseStyle = "snake_case"
+	NamingStyleUpperCase  SortFieldCaseStyle = "UPPER_CASE"
+)
 
 func (TimeMixin) Indexes() []ent.Index {
 	return []ent.Index{
@@ -27,7 +40,20 @@ func (TimeMixin) Indexes() []ent.Index {
 	}
 }
 
-func (TimeMixin) Fields() []ent.Field {
+func (r TimeMixin) Fields() []ent.Field {
+	createdAtOrder := "created_at"
+	updatedAtOrder := "updated_at"
+	switch r.SortFieldCaseStyle {
+	case NamingStylePascalCase:
+		createdAtOrder = lo.PascalCase(createdAtOrder)
+		updatedAtOrder = lo.PascalCase(updatedAtOrder)
+	case NamingStyleCamelCase:
+		createdAtOrder = lo.CamelCase(createdAtOrder)
+		updatedAtOrder = lo.CamelCase(updatedAtOrder)
+	case NamingStyleUpperCase:
+		createdAtOrder = strings.ToUpper(createdAtOrder)
+		updatedAtOrder = strings.ToUpper(updatedAtOrder)
+	}
 	return []ent.Field{
 		field.Time("created_at").
 			Optional().
@@ -35,7 +61,7 @@ func (TimeMixin) Fields() []ent.Field {
 			Default(time.Now).
 			Annotations(
 				entgql.Skip(entgql.SkipMutationCreateInput|entgql.SkipMutationUpdateInput),
-				entgql.OrderField("createdAt"),
+				entgql.OrderField(createdAtOrder),
 			),
 		field.Time("updated_at").
 			Optional().
@@ -43,7 +69,7 @@ func (TimeMixin) Fields() []ent.Field {
 			UpdateDefault(time.Now).
 			Annotations(
 				entgql.Skip(entgql.SkipMutationCreateInput|entgql.SkipMutationUpdateInput),
-				entgql.OrderField("updatedAt"),
+				entgql.OrderField(updatedAtOrder),
 			),
 	}
 }
