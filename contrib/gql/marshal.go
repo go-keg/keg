@@ -8,9 +8,9 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 )
 
-func MarshalerString(s string) graphql.Marshaler {
+func MarshalerString[T ~string](s T) graphql.Marshaler {
 	return graphql.WriterFunc(func(w io.Writer) {
-		_, _ = w.Write([]byte(strconv.Quote(s)))
+		_, _ = w.Write([]byte(strconv.Quote(string(s))))
 	})
 }
 
@@ -23,9 +23,9 @@ func UnmarshalerString[T ~string](v any) (T, error) {
 	}
 }
 
-func MarshalerUint8(s uint8) graphql.Marshaler {
+func MarshalerUint8[T ~uint8](v T) graphql.Marshaler {
 	return graphql.WriterFunc(func(w io.Writer) {
-		_, _ = w.Write([]byte(strconv.Itoa(int(s))))
+		_, _ = w.Write([]byte(strconv.Itoa(int(v))))
 	})
 }
 
