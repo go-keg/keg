@@ -8,9 +8,9 @@ import (
 type {{.Name.PascalCase}} struct {
     Key    string
     Server struct {
-        Http config.Server
+        HTTP config.Server `yaml:"http"`
         {{- if .UseGRPC}}
-        Grpc config.Server
+        GRPC config.Server `yaml:"grpc"`
         {{end}}
     }
     Data struct {

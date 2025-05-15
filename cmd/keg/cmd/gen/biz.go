@@ -21,6 +21,7 @@ const (
 
 import (
 	"context"
+
 	"github.com/go-kratos/kratos/v2/log"
 )
 
@@ -48,6 +49,7 @@ func (a {{.PascalCase}}UseCase) Todo(ctx context.Context) (string, error) {
 
 import (
 	"context"
+
 	"github.com/go-kratos/kratos/v2/log"
 	"{{.GoModule}}/internal/app/{{.ServiceName}}/biz"
 )
@@ -73,7 +75,7 @@ var bizCmd = &cobra.Command{
 	Example: "keg new biz account_relation",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
-			log.Fatalf("service-name is empty.")
+			log.Fatalf("biz name is empty.")
 		}
 		names := config.Name(args[0])
 		dir, err := utils.ExecDir()
@@ -91,7 +93,16 @@ var bizCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 		if !skipRepo {
+			rootPath, err := utils.ProjectRootPath()
+			if err != nil {
+				log.Fatal(err)
+			}
+			moduleName, err := utils.GoModuleName(rootPath)
+			if err != nil {
+				log.Fatal(err)
+			}
 			err = utils.WriteFile(data, map[string]any{
+				"GoModule":    moduleName,
 				"ServiceName": dir,
 				"CamelCase":   names.CamelCase(),
 				"PascalCase":  names.PascalCase(),

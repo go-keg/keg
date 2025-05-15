@@ -6,6 +6,11 @@ server:
   http:
     addr: 0.0.0.0:8080
     timeout: 30s
+{{- if .UseGRPC}}
+  grpc:
+    addr: 0.0.0.0:9000
+    timeout: 30s
+{{end}}
 data:
   database:
     driver: "mysql"

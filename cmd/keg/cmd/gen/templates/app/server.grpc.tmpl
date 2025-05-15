@@ -9,6 +9,6 @@ import (
 
 // NewGRPCServer new GRPC server.
 func NewGRPCServer(c *conf.{{.Name.PascalCase}}, logger log.Logger) *grpc.Server {
-    server := grpc.NewServer(c.Server.Grpc.GrpcOptions(logger)...)
+    server := grpc.NewServer(c.Server.GRPC.GrpcOptions(logger)...)
     return server
 }
