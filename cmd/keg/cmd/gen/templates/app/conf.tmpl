@@ -1,0 +1,37 @@
+{{- /* gotype: github.com/go-keg/keg/cmd/keg/config.App */}}
+package conf
+
+import (
+    "github.com/go-keg/keg/contrib/config"
+)
+
+type {{.Name.PascalCase}} struct {
+    Key    string
+    Server struct {
+        Http config.Server
+        {{- if .UseGRPC}}
+        Grpc config.Server
+        {{end}}
+    }
+    Data struct {
+        Database           config.Database
+        Kafka              config.Kafka
+        KafkaConsumerGroup config.KafkaConsumerGroup
+    }
+    Trace struct {
+        Endpoint string
+    }
+    Log config.Log
+}
+
+func Load(path string, envs ...string) (*{{.Name.PascalCase}}, error) {
+    return config.Load[{{.Name.PascalCase}}](path, envs...)
+}
+
+func MustLoad(path string, envs ...string) *{{.Name.PascalCase}} {
+    cfg, err := Load(path, envs...)
+    if err != nil {
+        panic(err)
+    }
+    return cfg
+}

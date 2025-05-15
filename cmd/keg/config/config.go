@@ -29,7 +29,6 @@ type Config struct {
 	Branches      []Branch `yaml:"branches"`
 	Default       Branch   `yaml:"default"`
 	Apps          []App    `yaml:"apps"`
-	K8s           K8s      `yaml:"k8s"`
 }
 
 func (r Config) App() App {
@@ -111,16 +110,8 @@ func (r Name) SnakeCase() string {
 	return lo.SnakeCase(string(r))
 }
 
-type K8s struct {
-	ImageRegistry     string `yaml:"image_registry"`
-	Namespace         string `yaml:"namespace"`
-	ImageVersion      string `yaml:"image_version"`
-	DefaultReplicas   int    `yaml:"default_replicas"`
-	ImagePullPolicy   string `yaml:"image_pull_policy"`
-	ResourcesRequests struct {
-		Cpu    string `yaml:"cpu"`
-		Memory string `yaml:"memory"`
-	} `yaml:"resources_requests"`
+func (r Name) UpperCase() string {
+	return strings.ToUpper(lo.SnakeCase(string(r)))
 }
 
 func (r Config) GetBranch() Branch {
@@ -149,11 +140,14 @@ func (r Config) GetTag() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	tagTypes := map[TagPolicy]string{
-		TagPolicyVersion:       version,
-		TagPolicyBranch:        fmt.Sprintf("latest-%s", branch),
-		TagPolicyVersionBranch: fmt.Sprintf("%s-%s", version, branch),
+	switch r.GetBranch().TagPolicy {
+	case TagPolicyVersion:
+		return version, nil
+	case TagPolicyBranch:
+		return fmt.Sprintf("latest-%s", branch), nil
+	case TagPolicyVersionBranch:
+		return fmt.Sprintf("%s-%s", version, branch), nil
+	default:
+		return fmt.Sprintf("%s-%s", version, branch), nil
 	}
-	b := r.GetBranch()
-	return tagTypes[b.TagPolicy], nil
 }

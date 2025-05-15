@@ -1,0 +1,10 @@
+{{- /* gotype: github.com/go-keg/keg/cmd/keg/config.App */}}
+ARG IMAGE=ubuntu:latest
+FROM ${IMAGE}
+
+WORKDIR /app
+COPY bin/{{.Name.KebabCase}} /app/{{.Name.KebabCase}}
+COPY configs/{{.Name.KebabCase}}.yaml /app/configs/{{.Name.KebabCase}}.yaml
+RUN mkdir "/app/logs"
+
+ENTRYPOINT ["/app/{{.Name.KebabCase}}"]

@@ -1,0 +1,82 @@
+{{- /* gotype: github.com/go-keg/keg/cmd/keg/config.App */}}
+//go:generate go run -mod=mod github.com/google/wire/cmd/wire
+package main
+
+import (
+    "os"
+
+    "github.com/go-keg/keg/contrib/tracing"
+    "github.com/go-kratos/kratos/v2"
+    "github.com/go-kratos/kratos/v2/log"
+    "github.com/go-kratos/kratos/v2/transport/http"
+    {{- if .UseGRPC}}
+    "github.com/go-kratos/kratos/v2/transport/grpc"
+    {{- end}}
+    "github.com/spf13/cobra"
+    "go.opentelemetry.io/otel/semconv/v1.25.0"
+    "{{.GoModule}}/internal/app/{{.Name.KebabCase}}/cmd/migrate"
+    "{{.GoModule}}/internal/app/{{.Name.KebabCase}}/conf"
+    "{{.GoModule}}/internal/app/{{.Name.KebabCase}}/job"
+    "{{.GoModule}}/internal/app/{{.Name.KebabCase}}/schedule"
+)
+
+var (
+    // Name is the name of the compiled software.
+    Name = "{{.Name.KebabCase}}"
+    // Version is the version of the compiled software.
+    Version = "latest"
+
+    id, _ = os.Hostname()
+
+    rootCmd = &cobra.Command{
+        Use:     Name,
+        Short:   "{{.Name.PascalCase}}",
+        Version: Version,
+    }
+)
+
+func init() {
+    rootCmd.AddCommand(migrate.Cmd)
+    rootCmd.PersistentFlags().String("conf", "./configs/{{.Name.KebabCase}}.yaml", "config path, eg: -conf config.yaml")
+}
+
+func main() {
+    rootCmd.Run = func(cmd *cobra.Command, args []string) {
+        path, _ := cmd.Flags().GetString("conf")
+        cfg := conf.MustLoad(path)
+        logger := zlog.NewKratosLoggerFromConfig(cfg.Log, Name,
+            "service.id", id,
+            "service.name", Name,
+            "service.version", Version,
+        )
+        tracing.SetTracerProvider(cfg.Trace.Endpoint,
+            semconv.ServiceName(Name),
+            semconv.ServiceVersion(Version),
+            semconv.ServiceInstanceID(id),
+            semconv.DeploymentEnvironment(os.Getenv("APP_ENV")),
+        )
+        app, cleanup, err := initApp(cfg, logger)
+        if err != nil {
+            panic(err)
+        }
+        defer cleanup()
+
+        // start and wait for stop signal
+        if err := app.Run(); err != nil {
+            panic(err)
+        }
+    }
+    if err := rootCmd.Execute(); err != nil {
+        panic(err)
+    }
+}
+
+func newApp(logger log.Logger, hs *http.Server, {{if .UseGRPC}}gs *grpc.Server, {{end}} job *job.Job, schedule *schedule.Schedule) *kratos.App {
+    return kratos.New(
+        kratos.ID(id),
+        kratos.Name(Name),
+        kratos.Version(Version),
+        kratos.Logger(logger),
+        kratos.Server(hs, {{if .UseGRPC}}gs, {{end}}job, schedule),
+    )
+}

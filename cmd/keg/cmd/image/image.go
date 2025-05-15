@@ -3,11 +3,9 @@ package image
 import (
 	"log"
 
-	"github.com/go-keg/keg/cmd/keg/cmd/config"
-	"github.com/go-keg/keg/cmd/keg/cmd/utils"
+	"github.com/go-keg/keg/cmd/keg/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	_ "github.com/spf13/viper"
 )
 
 var Cmd = &cobra.Command{Use: "image", PersistentPreRun: func(cmd *cobra.Command, args []string) {
@@ -21,7 +19,7 @@ var Cmd = &cobra.Command{Use: "image", PersistentPreRun: func(cmd *cobra.Command
 	if err != nil {
 		panic(err)
 	}
-	tag, err = utils.GetTag(cfg)
+	tag, err = cfg.GetTag()
 	if err != nil {
 		log.Fatalf("fatal error config file: %v", err)
 	}

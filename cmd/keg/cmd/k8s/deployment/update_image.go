@@ -2,11 +2,9 @@ package deployment
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/go-keg/keg/cmd/keg/cmd/k8s/pkg"
-	"github.com/go-keg/keg/cmd/keg/cmd/utils"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -21,11 +19,7 @@ var updateImageCmd = &cobra.Command{
 	Use:     "update-image",
 	Example: "keg k8s deployment update-image -n account-interface",
 	Run: func(cmd *cobra.Command, args []string) {
-		branch, err := utils.GetBranch()
-		if err != nil {
-			log.Fatalf("get branch err: %v", err)
-		}
-		b := cfg.GetBranch(branch)
+		b := cfg.GetBranch()
 		deploy := NewDeployments(b.Namespace, name, pkg.NewClientSet(b.KubeConfig))
 		image := fmt.Sprintf("%s/%s:%s", cfg.ImageRegistry, name, tag)
 		ts := time.Now().Unix() * 1000

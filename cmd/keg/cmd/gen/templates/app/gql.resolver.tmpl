@@ -1,0 +1,23 @@
+{{- /* gotype: github.com/go-keg/keg/cmd/keg/config.App*/}}
+package graphql
+
+import (
+    "github.com/99designs/gqlgen/graphql"
+    "github.com/go-kratos/kratos/v2/log"
+    "{{.GoModule}}/internal/data/{{.DB.KebabCase}}/ent"
+)
+
+type Resolver struct {
+    client *ent.Client
+    log    *log.Helper
+}
+
+// NewSchema creates a graphql executable schema.
+func NewSchema(logger log.Logger, client *ent.Client) graphql.ExecutableSchema {
+    return NewExecutableSchema(Config{
+        Resolvers: &Resolver{
+            log:    log.NewHelper(log.With(logger, "module", "service/graphql")),
+            client: client,
+        },
+    })
+}

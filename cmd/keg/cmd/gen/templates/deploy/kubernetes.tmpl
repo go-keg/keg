@@ -1,0 +1,52 @@
+{{- /* gotype: github.com/go-keg/keg/cmd/keg/config.App */}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: golang-{{.Name.KebabCase}}
+    lang: golang
+  name: golang-{{.Name.KebabCase}}
+  namespace: ${NAMESPACE}
+spec:
+  replicas: ${DEFAULT_REPLICAS}
+  selector:
+    matchLabels:
+      app: golang-{{.Name.KebabCase}}
+      lang: golang
+  template:
+    metadata:
+      labels:
+        app: golang-{{.Name.KebabCase}}
+        lang: golang
+    spec:
+      containers:
+        - image: ${IMAGE_REGISTRY}/golang-{{.Name.KebabCase}}:${IMAGE_VERSION}
+          imagePullPolicy: ${IMAGE_PULL_POLICY}
+          name: golang-{{.Name.KebabCase}}
+          resources:
+            requests:
+              cpu: ${RESOURCES_REQUESTS_CPU}
+              memory: ${RESOURCES_REQUESTS_MEMORY}
+          envFrom:
+            - configMapRef:
+                name: monorepo-env
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: {{.Name.KebabCase}}-svc
+    lang: golang
+  name: golang-{{.Name.KebabCase}}-svc
+  namespace: ${NAMESPACE}
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: golang-{{.Name.KebabCase}}
+    lang: golang
+  type: ClusterIP

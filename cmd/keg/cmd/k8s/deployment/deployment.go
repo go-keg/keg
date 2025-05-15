@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/go-keg/keg/cmd/keg/cmd/config"
+	"github.com/go-keg/keg/cmd/keg/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

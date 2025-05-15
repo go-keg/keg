@@ -5,7 +5,8 @@ import (
 	"log"
 	"text/template"
 
-	"github.com/go-keg/keg/cmd/keg/cmd/utils"
+	"github.com/go-keg/keg/cmd/keg/config"
+	"github.com/go-keg/keg/cmd/keg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -69,12 +70,12 @@ func (a {{.CamelCase}}Repo) Todo(ctx context.Context) (string, error) {
 
 var bizCmd = &cobra.Command{
 	Use:     "biz",
-	Example: "codegen new biz account_relation",
+	Example: "keg new biz account_relation",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
 			log.Fatalf("service-name is empty.")
 		}
-		names := utils.NewNames(args[0])
+		names := config.Name(args[0])
 		dir, err := utils.ExecDir()
 		if err != nil {
 			log.Fatal(err)
@@ -83,19 +84,19 @@ var bizCmd = &cobra.Command{
 		data := template.Must(template.New("data").Parse(dataTemp))
 
 		err = utils.WriteFile(biz, map[string]any{
-			"PascalCase": names.PascalCase,
-			"SnakeCase":  names.SnakeCase,
-		}, fmt.Sprintf("biz/%s.go", names.SnakeCase))
+			"PascalCase": names.PascalCase(),
+			"SnakeCase":  names.SnakeCase(),
+		}, fmt.Sprintf("biz/%s.go", names.SnakeCase()))
 		if err != nil {
 			log.Fatal(err)
 		}
 		if !skipRepo {
 			err = utils.WriteFile(data, map[string]any{
 				"ServiceName": dir,
-				"CamelCase":   names.CamelCase,
-				"PascalCase":  names.PascalCase,
-				"SnakeCase":   names.SnakeCase,
-			}, fmt.Sprintf("data/%s.go", names.SnakeCase))
+				"CamelCase":   names.CamelCase(),
+				"PascalCase":  names.PascalCase(),
+				"SnakeCase":   names.SnakeCase(),
+			}, fmt.Sprintf("data/%s.go", names.SnakeCase()))
 			if err != nil {
 				log.Fatal(err)
 			}

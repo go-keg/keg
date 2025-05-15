@@ -45,14 +45,6 @@ var Cmd = &cobra.Command{
 					Label:   "DefaultService",
 					Default: "account",
 				}
-				serviceName, err := pn.Run()
-				if err != nil {
-					return err
-				}
-				cfg.Apps = append(cfg.Apps, config.App{
-					Name: config.Name(serviceName),
-					DB:   config.Name(serviceName),
-				})
 			}
 
 			bytes, err := yaml3.Marshal(&cfg)

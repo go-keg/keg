@@ -1,0 +1,22 @@
+{{- /* gotype: github.com/go-keg/keg/cmd/keg/config.App */}}
+package data
+
+import (
+    "github.com/google/wire"
+    "github.com/go-keg/keg/contrib/ent/driver"
+    "{{.GoModule}}/internal/app/{{.Name.KebabCase}}/conf"
+    "{{.GoModule}}/internal/data/{{.DB.KebabCase}}/ent"
+    _ "{{.GoModule}}/internal/data/{{.DB.KebabCase}}/ent/runtime"
+)
+
+var ProviderSet = wire.NewSet(
+    NewEntClient,
+)
+
+func NewEntClient(cfg *conf.{{.Name.PascalCase}}) (*ent.Client, error) {
+    drv, err := driver.NewDriver(cfg.Data.Database)
+    if err != nil {
+        return nil, err
+    }
+    return ent.NewClient(ent.Driver(drv)), nil
+}
