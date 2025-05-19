@@ -10,7 +10,7 @@ type Filter struct {
 }
 
 func (w *Filter) Append(p ...*sql.Predicate) {
-	s := lo.Filter(p, func(item *sql.Predicate, index int) bool {
+	s := lo.Filter(p, func(item *sql.Predicate, _ int) bool {
 		return item != nil
 	})
 	if len(s) > 0 {
@@ -19,7 +19,7 @@ func (w *Filter) Append(p ...*sql.Predicate) {
 }
 
 func (w *Filter) AppendOr(p ...*sql.Predicate) {
-	s := lo.Filter(p, func(item *sql.Predicate, index int) bool {
+	s := lo.Filter(p, func(item *sql.Predicate, _ int) bool {
 		return item != nil
 	})
 	if len(s) > 0 {

@@ -48,6 +48,34 @@ func EQ[T any](col string, v *T) *sql.Predicate {
 	return sql.EQ(col, *v)
 }
 
+func GT[T any](col string, v *T) *sql.Predicate {
+	if v == nil {
+		return nil
+	}
+	return sql.GT(col, *v)
+}
+
+func GTE[T any](col string, v *T) *sql.Predicate {
+	if v == nil {
+		return nil
+	}
+	return sql.GTE(col, *v)
+}
+
+func LT[T any](col string, v *T) *sql.Predicate {
+	if v == nil {
+		return nil
+	}
+	return sql.LT(col, *v)
+}
+
+func LTE[T any](col string, v *T) *sql.Predicate {
+	if v == nil {
+		return nil
+	}
+	return sql.LTE(col, *v)
+}
+
 func Contains(col string, v *string) *sql.Predicate {
 	var t *string
 	if v != t {
