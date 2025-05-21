@@ -16,7 +16,7 @@ type KeyValue func() (string, log.Valuer)
 
 func ServiceInstanceID(val string) KeyValue {
 	return func() (string, log.Valuer) {
-		return "service.instance.id", func(ctx context.Context) any {
+		return "service.instance.id", func(_ context.Context) any {
 			return val
 		}
 	}
@@ -24,7 +24,7 @@ func ServiceInstanceID(val string) KeyValue {
 
 func DeploymentEnvironment(val string) KeyValue {
 	return func() (string, log.Valuer) {
-		return "environment", func(ctx context.Context) any {
+		return "environment", func(_ context.Context) any {
 			return val
 		}
 	}
@@ -32,7 +32,7 @@ func DeploymentEnvironment(val string) KeyValue {
 
 func ServiceName(val string) KeyValue {
 	return func() (string, log.Valuer) {
-		return "service.name", func(ctx context.Context) any {
+		return "service.name", func(_ context.Context) any {
 			return val
 		}
 	}
@@ -40,7 +40,7 @@ func ServiceName(val string) KeyValue {
 
 func ServiceVersion(val string) KeyValue {
 	return func() (string, log.Valuer) {
-		return "service.version", func(ctx context.Context) any {
+		return "service.version", func(_ context.Context) any {
 			return val
 		}
 	}

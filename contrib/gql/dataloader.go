@@ -2,11 +2,22 @@ package gql
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/graph-gophers/dataloader"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
 )
+
+type IntKey int
+
+func (k IntKey) String() string {
+	return strconv.Itoa(int(k))
+}
+
+func (k IntKey) Raw() any {
+	return int(k)
+}
 
 type LoaderFunc func(ctx context.Context, keys dataloader.Keys) (map[dataloader.Key]any, error)
 
@@ -29,8 +40,26 @@ func BatchFunc(fn LoaderFunc) dataloader.BatchFunc {
 }
 
 func ToInts(keys dataloader.Keys) []int {
-	return lo.Map(keys, func(item dataloader.Key, index int) int {
+	return lo.Map(keys, func(item dataloader.Key, _ int) int {
 		return cast.ToInt(item.String())
+	})
+}
+
+func ToInt64s(keys dataloader.Keys) []int64 {
+	return lo.Map(keys, func(item dataloader.Key, _ int) int64 {
+		return cast.ToInt64(item.String())
+	})
+}
+
+func ToStrings(keys dataloader.Keys) []string {
+	return lo.Map(keys, func(item dataloader.Key, _ int) string {
+		return item.String()
+	})
+}
+
+func ToAnySlice(keys dataloader.Keys) []any {
+	return lo.Map(keys, func(item dataloader.Key, _ int) any {
+		return item.Raw()
 	})
 }
 

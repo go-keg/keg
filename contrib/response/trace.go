@@ -8,7 +8,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-func AppendTraceId(header string) func(handler middleware.Handler) middleware.Handler {
+func AppendTraceID(header string) func(handler middleware.Handler) middleware.Handler {
 	return func(handler middleware.Handler) middleware.Handler {
 		return func(ctx context.Context, req any) (reply any, err error) {
 			if tr, ok := transport.FromServerContext(ctx); ok {

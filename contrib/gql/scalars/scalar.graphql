@@ -1,2 +1,7 @@
 """Duration 时长"""
 scalar Duration
+
+scalar Int64
+scalar Int8
+scalar Uint8
+scalar Uint
