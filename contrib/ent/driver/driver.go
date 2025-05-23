@@ -8,8 +8,8 @@ import (
 	entsql "entgo.io/ent/dialect/sql"
 	"github.com/XSAM/otelsql"
 	"github.com/go-keg/keg/contrib/config"
-	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/lib/pq"
+	_ "github.com/go-sql-driver/mysql" // Register Mysql driver
+	_ "github.com/lib/pq"              // Register Postgres driver
 	semconv "go.opentelemetry.io/otel/semconv/v1.25.0"
 )
 
@@ -25,7 +25,7 @@ func NewDriver(cfg config.Database) (dialect.Driver, error) {
 	return newDriver(driver, db, cfg)
 }
 
-func NewDriverWithOtel(cfg config.Database, opts ...otelsql.Option) (dialect.Driver, error) {
+func NewDriverWithOTEL(cfg config.Database, opts ...otelsql.Option) (dialect.Driver, error) {
 	driver := dialect.MySQL
 	if cfg.Driver != "" {
 		driver = cfg.Driver
