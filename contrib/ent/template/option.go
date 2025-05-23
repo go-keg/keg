@@ -2,7 +2,6 @@ package template
 
 import (
 	"embed"
-	_ "embed"
 
 	"entgo.io/ent/entc"
 	"entgo.io/ent/entc/gen"

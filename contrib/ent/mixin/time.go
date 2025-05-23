@@ -12,9 +12,6 @@ import (
 	"github.com/samber/lo"
 )
 
-// -------------------------------------------------
-// Mixin definition
-
 // TimeMixin implements the ent.Mixin for sharing
 // time fields with package schemas.
 type TimeMixin struct {
@@ -53,6 +50,7 @@ func (r TimeMixin) Fields() []ent.Field {
 	case NamingStyleUpperCase:
 		createdAtOrder = strings.ToUpper(createdAtOrder)
 		updatedAtOrder = strings.ToUpper(updatedAtOrder)
+	case NamingStyleSnakeCase:
 	}
 	return []ent.Field{
 		field.Time("created_at").

@@ -24,6 +24,8 @@ go install github.com/go-keg/keg/cmd/keg@latest
 keg image tag #根据 keg.yaml 配置的分支策略生成 build tag
 keg k8s deployment update-image -n $(SERVICE) #更新 deployment 镜像版本(重新部署)
 keg k8s gen config -n ${NAMESPACE} # 根据模板生成对应namespace的k8s部署相关文件
+keg new ${SERVICE_NAME} # 根据模板生成新服务
+keg new biz ${NAME} # 根据模板生成新的 biz 
 ```
 
 ### contrib/ent
@@ -58,7 +60,7 @@ func (r AdminLoader) userRoleCount() gql.LoaderFunc {
 			return nil, err
 		}
 		return lo.SliceToMap(items, func(item item) (dataloader.Key, any) {
-			return gql.ToStringKey(item.ID), item.Count
+			return gql.IntKey(item.ID), item.Count
 		}), nil
 	}
 }

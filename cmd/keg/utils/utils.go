@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
-
-	"github.com/go-keg/keg/cmd/keg/internal"
 )
 
 func GetBranch() (string, error) {
@@ -125,13 +123,13 @@ func ProjectRootPath() (string, error) {
 	}
 	dir := currentDir
 	for {
-		_, err = os.Stat(filepath.Join(dir, internal.ConfigFile))
+		_, err = os.Stat(filepath.Join(dir, "go.mod"))
 		if err == nil {
 			return dir, nil
 		}
 		parentDir := filepath.Dir(dir)
 		if parentDir == dir { // 到达根目录时停止
-			return "", fmt.Errorf("file not found: %s", internal.ConfigFile)
+			return "", fmt.Errorf("file not found: %s", "go.mod")
 		}
 		dir = parentDir
 	}

@@ -38,7 +38,7 @@ func NewDriverWithOTEL(cfg config.Database, opts ...otelsql.Option) (dialect.Dri
 		return nil, err
 	}
 	err = otelsql.RegisterDBStatsMetrics(db, otelsql.WithAttributes(
-		semconv.DBSystemMySQL,
+		semconv.DBSystemKey.String(driver),
 	))
 	if err != nil {
 		return nil, err

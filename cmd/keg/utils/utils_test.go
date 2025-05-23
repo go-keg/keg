@@ -94,3 +94,25 @@ func TestName(t *testing.T) {
 
 	fmt.Printf("You choose %s\n", result)
 }
+
+func TestProjectRootPath(t *testing.T) {
+	tests := []struct {
+		name    string
+		want    string
+		wantErr bool
+	}{
+		{"", "/Users/eiixy/workspace/eiixy/go-keg/keg", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ProjectRootPath()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ProjectRootPath() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("ProjectRootPath() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

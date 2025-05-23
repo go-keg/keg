@@ -5,11 +5,12 @@ import (
 
 	"github.com/go-keg/keg/cmd/keg/cmd/gen"
 	"github.com/go-keg/keg/cmd/keg/cmd/image"
-	initCmd "github.com/go-keg/keg/cmd/keg/cmd/init"
 	"github.com/go-keg/keg/cmd/keg/cmd/k8s"
-	"github.com/go-keg/keg/cmd/keg/internal"
+	"github.com/go-keg/keg/cmd/keg/config"
 	"github.com/spf13/cobra"
 )
+
+const Version = "v0.1.2"
 
 var rootCmd = &cobra.Command{
 	Use: "keg",
@@ -18,13 +19,13 @@ var rootCmd = &cobra.Command{
 var version = &cobra.Command{
 	Use: "version",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(internal.Version)
+		fmt.Println(Version)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(image.Cmd, k8s.Cmd, gen.Cmd, initCmd.Cmd, version)
-	rootCmd.PersistentFlags().StringP("conf", "c", internal.ConfigFile, "keg config file")
+	rootCmd.AddCommand(image.Cmd, k8s.Cmd, gen.Cmd, version)
+	rootCmd.PersistentFlags().StringP("conf", "c", config.FileName, "keg config file")
 }
 
 func main() {

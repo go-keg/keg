@@ -3,16 +3,15 @@ package config
 import (
 	"fmt"
 	"log"
-	"os"
 	"path"
-	"path/filepath"
 	"strings"
 
-	"github.com/go-keg/keg/cmd/keg/internal"
 	"github.com/go-keg/keg/cmd/keg/utils"
 	"github.com/samber/lo"
 	"k8s.io/client-go/util/homedir"
 )
+
+const FileName = "keg.yaml"
 
 // TagPolicy 镜像 tag 生成策略
 type TagPolicy string
@@ -29,39 +28,6 @@ type Config struct {
 	Branches      []Branch `yaml:"branches"`
 	Default       Branch   `yaml:"default"`
 	Apps          []App    `yaml:"apps"`
-}
-
-func (r Config) App() App {
-	currentDir, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-	rootPath, err := utils.ProjectRootPath()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// 检查文件是否存在
-	_, err = os.Stat(filepath.Join(rootPath, internal.ConfigFile))
-	if err == nil {
-		if !strings.Contains(currentDir, filepath.Join(rootPath, "internal/app/")) {
-			log.Fatal("当前所在目录不在 internal/app/{service-name} 中")
-		}
-		rootPath := strings.TrimPrefix(currentDir, filepath.Join(rootPath, "internal/app/"))
-		fmt.Println("rootPath", rootPath)
-		arr := strings.SplitN(rootPath, "/", 3)
-		if len(arr) >= 2 {
-			serviceName := arr[1]
-			fmt.Println("serviceName:", serviceName)
-			for _, app := range r.Apps {
-				if string(app.Name) == serviceName {
-					return app
-				}
-			}
-			log.Fatalf("当前服务不在 %s 中\n", internal.ConfigFile)
-		}
-	}
-	return App{}
 }
 
 type Branch struct {
