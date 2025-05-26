@@ -301,7 +301,7 @@ func (d *DebugTx) QueryContext(ctx context.Context, query string, args ...any) (
 
 // Commit logs this step and calls the underlying transaction Commit method.
 func (d *DebugTx) Commit() error {
-	d.Before(context.Background(), QueryLog{
+	d.Before(d.ctx, QueryLog{
 		Method:    MethodTxCommit,
 		Tx:        d.id,
 		StartTime: time.Now(),
@@ -311,7 +311,7 @@ func (d *DebugTx) Commit() error {
 
 // Rollback logs this step and calls the underlying transaction Rollback method.
 func (d *DebugTx) Rollback() error {
-	d.Before(context.Background(), QueryLog{
+	d.Before(d.ctx, QueryLog{
 		Method:    MethodTxRollback,
 		Tx:        d.id,
 		StartTime: time.Now(),
