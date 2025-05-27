@@ -29,7 +29,7 @@ func UnmarshalInt64(v any) (int64, error) {
 
 func MarshalInt8(t int8) graphql.Marshaler {
 	return graphql.WriterFunc(func(w io.Writer) {
-		_, _ = io.WriteString(w, fmt.Sprintf(`"%d"`, t))
+		_, _ = io.WriteString(w, fmt.Sprintf("%d", t))
 	})
 }
 
@@ -44,7 +44,7 @@ func UnmarshalInt8(v any) (int8, error) {
 
 func MarshalUint8(t uint8) graphql.Marshaler {
 	return graphql.WriterFunc(func(w io.Writer) {
-		_, _ = io.WriteString(w, fmt.Sprintf(`"%d"`, t))
+		_, _ = io.WriteString(w, fmt.Sprintf("%d", t))
 	})
 }
 
