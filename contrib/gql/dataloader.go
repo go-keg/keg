@@ -2,6 +2,7 @@ package gql
 
 import (
 	"context"
+	"errors"
 	"strconv"
 
 	"github.com/graph-gophers/dataloader"
@@ -83,4 +84,17 @@ func FillDefaultByKey(keys dataloader.Keys, result map[dataloader.Key]any, fn fu
 		}
 	}
 	return result
+}
+
+func LoadManyResult[T any](items []any, err []error) ([]T, error) {
+	if err != nil || items == nil {
+		return nil, errors.Join(err...)
+	}
+	return lo.FilterMap(items, func(item any, _ int) (T, bool) {
+		var t T
+		if item == nil {
+			return t, false
+		}
+		return item.(T), true
+	}), nil
 }
