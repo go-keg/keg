@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -44,27 +43,22 @@ func (h *DLQHandler) Cleanup(session sarama.ConsumerGroupSession) error {
 	return h.wrappedHandler.Cleanup(session)
 }
 
-// ConsumeClaim 是核心，在这里实现 DLQ 逻辑
+// ConsumeClaim 实现 DLQ 逻辑
 func (h *DLQHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for message := range claim.Messages() {
 		topic := strings.TrimSuffix(message.Topic, h.dlqTopic)
-		handler, handlerExists := h.wrappedHandler.handlers[topic]
-		if !handlerExists {
-			return fmt.Errorf("topic: %s, not found hand", topic)
-		}
-
 		var err error
 		for i := 0; i < h.maxRetries+1; i++ {
-			err = handler(message)
+			err = h.wrappedHandler.handler(message)
 			if err == nil {
-				break // 处理成功，跳出重试循环
+				break
 			}
-			h.log.Warnf("消息处理失败，准备重试: topic=%s, offset=%d, retry=%d, err=%v", message.Topic, message.Offset, i, err)
+			h.log.Warnf("message processing failed, preparing to retry: topic=%s, offset=%d, retry=%d, err=%v", message.Topic, message.Offset, i, err)
 		}
 
 		if err != nil {
 			// 所有重试后仍然失败，发送到 DLQ
-			h.log.Errorf("所有重试失败，发送到死信队列: topic=%s, offset=%d, err=%v", message.Topic, message.Offset, err)
+			h.log.Errorf("all retries failed, sent to the dead letter queue: topic=%s, offset=%d, err=%v", message.Topic, message.Offset, err)
 
 			dlqMessage := &sarama.ProducerMessage{
 				Topic: topic + h.dlqTopic,
@@ -78,12 +72,11 @@ func (h *DLQHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sar
 			}
 
 			if _, _, err = h.producer.SendMessage(dlqMessage); err != nil {
-				h.log.Errorf("发送到死信队列失败: %v", err)
+				h.log.Errorf("failed to send to the dead letter queue: %v", err)
 			}
 			time.Sleep(time.Second)
 		}
 
-		// 关键：无论成功、失败进入DLQ，都必须标记原始消息为已消费
 		session.MarkMessage(message, "")
 	}
 	return nil

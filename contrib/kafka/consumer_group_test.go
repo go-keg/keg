@@ -14,14 +14,15 @@ import (
 
 var logger = klog.DefaultLogger
 
-var handler = NewConsumerGroupHandler(map[string]MessageHandler{
-	"test": func(message *sarama.ConsumerMessage) error {
+var handler = NewConsumerGroupHandler(func(message *sarama.ConsumerMessage) error {
+	switch message.Topic {
+	case "test":
 		if message.Offset%5 == 4 {
 			return fmt.Errorf("offset is %d", message.Offset)
 		}
 		fmt.Println("consume", message.Topic, message.Partition, message.Offset)
-		return nil
-	},
+	}
+	return nil
 }, WithLogger(logger))
 
 func TestNewConsumerGroup(t *testing.T) {
@@ -57,20 +58,10 @@ func TestNewConsumerGroup(t *testing.T) {
 }
 
 func TestNewConsumerGroupDLQ(t *testing.T) {
-	logger := klog.DefaultLogger
 	producer, err := NewSyncProducer([]string{"localhost:9092"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	handler := NewConsumerGroupHandler(map[string]MessageHandler{
-		"test": func(message *sarama.ConsumerMessage) error {
-			if message.Offset%5 == 0 {
-				return fmt.Errorf("offset is %d", message.Offset)
-			}
-			fmt.Println("consume", message.Topic, message.Partition, message.Offset)
-			return nil
-		},
-	}, WithLogger(logger))
 
 	ctx, cancel := context.WithCancel(context.TODO())
 	wg := sync.WaitGroup{}

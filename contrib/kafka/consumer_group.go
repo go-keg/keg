@@ -127,14 +127,14 @@ func (r *ConsumerGroup) Run(ctx context.Context) error {
 }
 
 type ConsumerGroupHandler struct {
-	setup    func(s sarama.ConsumerGroupSession) error
-	cleanup  func(s sarama.ConsumerGroupSession) error
-	handlers map[string]MessageHandler // topic -> handler
-	logger   log.Logger
-	log      *log.Helper
+	setup   func(s sarama.ConsumerGroupSession) error
+	cleanup func(s sarama.ConsumerGroupSession) error
+	handler MessageHandler // topic -> handler
+	logger  log.Logger
+	log     *log.Helper
 }
 
-func NewConsumerGroupHandler(handlers map[string]MessageHandler, opts ...ConsumerGroupHandlerOption) *ConsumerGroupHandler {
+func NewConsumerGroupHandler(handler MessageHandler, opts ...ConsumerGroupHandlerOption) *ConsumerGroupHandler {
 	h := &ConsumerGroupHandler{
 		setup: func(_ sarama.ConsumerGroupSession) error {
 			return nil
@@ -142,8 +142,8 @@ func NewConsumerGroupHandler(handlers map[string]MessageHandler, opts ...Consume
 		cleanup: func(_ sarama.ConsumerGroupSession) error {
 			return nil
 		},
-		handlers: handlers,
-		logger:   log.DefaultLogger,
+		handler: handler,
+		logger:  log.DefaultLogger,
 	}
 	for _, opt := range opts {
 		opt(h)
@@ -168,14 +168,10 @@ func (r *ConsumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession,
 				r.log.Debug("message channel was closed")
 				return nil
 			}
-			if handler, ok := r.handlers[message.Topic]; ok {
-				if err := handler(message); err != nil {
-					r.log.Debugf("message error: topic = %s partition = %d offset = %d err = %v", message.Topic, message.Partition, message.Offset, err)
-					claim.HighWaterMarkOffset()
-					return err
-				}
-			} else {
-				return fmt.Errorf("topic: %s, not found handler", message.Topic)
+			if err := r.handler(message); err != nil {
+				r.log.Errorf("message: topic = %s partition = %d offset = %d err = %v", message.Topic, message.Partition, message.Offset, err)
+				claim.HighWaterMarkOffset()
+				return err
 			}
 			r.log.Debugf("message claimed: topic = %s partition = %d offset = %d", message.Topic, message.Partition, message.Offset)
 			session.MarkMessage(message, "")
@@ -183,8 +179,4 @@ func (r *ConsumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession,
 			return nil
 		}
 	}
-}
-
-func (r *ConsumerGroupHandler) Register(topic string, handler MessageHandler) {
-	r.handlers[topic] = handler
 }
