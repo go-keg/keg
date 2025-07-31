@@ -11,7 +11,7 @@ import (
 
 func TestNewSyncProducer(t *testing.T) {
 	producer, err := NewSyncProducer(
-		[]string{"127.0.0.1:9093"},
+		[]string{"127.0.0.1:9092"},
 		SetNetSASL("", ""),
 		SetProducerPartitioner(sarama.NewHashPartitioner),
 	)

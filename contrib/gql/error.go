@@ -33,7 +33,16 @@ var ErrUnauthorized = Error("unauthorized", WithErrCode("Unauthorized"))
 var ErrNotFound = Error("data not found", WithErrCode("NotFound"))
 
 type ErrOptions struct {
-	code string
+	code       string
+	extensions map[string]any
+}
+
+func (r ErrOptions) Extensions() map[string]any {
+	if r.extensions == nil {
+		return map[string]any{"code": r.code}
+	}
+	r.extensions["code"] = r.code
+	return r.extensions
 }
 
 type ErrOption func(*ErrOptions)
@@ -41,6 +50,12 @@ type ErrOption func(*ErrOptions)
 func WithErrCode(code string) ErrOption {
 	return func(opt *ErrOptions) {
 		opt.code = code
+	}
+}
+
+func WithExtensions(data map[string]any) ErrOption {
+	return func(opt *ErrOptions) {
+		opt.extensions = data
 	}
 }
 
@@ -52,11 +67,9 @@ func Error(message string, opts ...ErrOption) *gqlerror.Error {
 		opt(e)
 	}
 	return &gqlerror.Error{
-		Message: message,
-		Extensions: map[string]any{
-			"code": e.code,
-		},
-		Rule: CustomErrorKey,
+		Message:    message,
+		Extensions: e.Extensions(),
+		Rule:       CustomErrorKey,
 	}
 }
 

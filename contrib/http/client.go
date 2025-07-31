@@ -43,7 +43,7 @@ func WithBaseURL(baseURL string) ClientOptionFunc {
 }
 
 func NewClient(opts ...ClientOptionFunc) *Client {
-	c := Client{client: http.DefaultClient}
+	c := Client{client: &http.Client{}}
 	for _, opt := range opts {
 		opt(&c)
 	}
@@ -110,7 +110,10 @@ func (c Client) Request(ctx context.Context, method, url string, opts ...OptionF
 	}
 	response, err := c.client.Do(req)
 	if err != nil {
-		return nil, err
+		return &Response{
+			headers: req.Header,
+			request: req,
+		}, err
 	}
 	defer func() {
 		_ = response.Body.Close()
@@ -142,21 +145,19 @@ func SetPathParams(params map[string]string) OptionFunc {
 
 func SetFormData(data map[string]string) OptionFunc {
 	return func(r *http.Request) {
-		r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		body := neturl.Values{}
 		for k, v := range data {
-			r.Form.Del(k)
-			r.Form.Add(k, v)
+			body.Set(k, v)
 		}
+		r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		r.Body = io.NopCloser(strings.NewReader(body.Encode()))
 	}
 }
 
 func SetBody(data any) OptionFunc {
 	return func(r *http.Request) {
 		r.Header.Set("Content-Type", "application/json")
-		marshal, err := json.Marshal(data)
-		if err != nil {
-			return
-		}
+		marshal, _ := json.Marshal(data)
 		r.Body = io.NopCloser(bytes.NewBuffer(marshal))
 	}
 }

@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"os/signal"
 	"strings"
@@ -14,6 +15,10 @@ import (
 )
 
 type ConsumerGroupOption func(cg *ConsumerGroup)
+
+type ConsumerGroupHandlerOption func(cg *ConsumerGroupHandler)
+
+type MessageHandler func(message *sarama.ConsumerMessage) error
 
 func SetLogger(logger log.Logger) ConsumerGroupOption {
 	return func(cg *ConsumerGroup) {
@@ -29,44 +34,42 @@ func SetConfigOptions(opts ...ConfigOption) ConsumerGroupOption {
 	}
 }
 
-func SetHandlerSetup(h func(s sarama.ConsumerGroupSession) error) ConsumerGroupOption {
-	return func(cg *ConsumerGroup) {
-		cg.setup = h
+func WithHandlerSetup(f func(s sarama.ConsumerGroupSession) error) ConsumerGroupHandlerOption {
+	return func(h *ConsumerGroupHandler) {
+		h.setup = f
 	}
 }
 
-func SetHandlerCleanup(h func(s sarama.ConsumerGroupSession) error) ConsumerGroupOption {
-	return func(cg *ConsumerGroup) {
-		cg.cleanup = h
+func WithHandlerCleanup(f func(s sarama.ConsumerGroupSession) error) ConsumerGroupHandlerOption {
+	return func(h *ConsumerGroupHandler) {
+		h.cleanup = f
+	}
+}
+
+func WithLogger(logger log.Logger) ConsumerGroupHandlerOption {
+	return func(h *ConsumerGroupHandler) {
+		h.logger = logger
 	}
 }
 
 type ConsumerGroup struct {
 	topics  []string
-	setup   func(s sarama.ConsumerGroupSession) error
-	cleanup func(s sarama.ConsumerGroupSession) error
-	handler func(message *sarama.ConsumerMessage) error
+	handler sarama.ConsumerGroupHandler
 	config  *sarama.Config
 	client  sarama.ConsumerGroup
 	sigterm chan os.Signal
 	logger  log.Logger
 	log     *log.Helper
-	run     bool
 }
 
-func NewConsumerGroup(brokers []string, group string, topics []string, opts ...ConsumerGroupOption) *ConsumerGroup {
+func NewConsumerGroup(brokers []string, group string, topics []string, handler sarama.ConsumerGroupHandler, opts ...ConsumerGroupOption) (*ConsumerGroup, error) {
 	cfg := sarama.NewConfig()
 	cfg.Version = sarama.V2_1_0_0
 	cfg.Consumer.Group.Rebalance.GroupStrategies = []sarama.BalanceStrategy{sarama.NewBalanceStrategyRoundRobin()}
 	cfg.Consumer.Offsets.Initial = sarama.OffsetOldest
 	cg := &ConsumerGroup{
-		config: cfg,
-		setup: func(s sarama.ConsumerGroupSession) error {
-			return nil
-		},
-		cleanup: func(s sarama.ConsumerGroupSession) error {
-			return nil
-		},
+		config:  cfg,
+		handler: handler,
 		topics:  topics,
 		sigterm: make(chan os.Signal, 1),
 		logger:  log.DefaultLogger,
@@ -76,7 +79,7 @@ func NewConsumerGroup(brokers []string, group string, topics []string, opts ...C
 	}
 	client, err := sarama.NewConsumerGroup(brokers, group, cg.config)
 	if err != nil {
-		log.Fatalf("Error creating consumer group client: %v", err)
+		return nil, fmt.Errorf("error creating consumer group client: %v", err)
 	}
 	cg.log = log.NewHelper(log.With(cg.logger,
 		"module", "kafka_consumer",
@@ -84,28 +87,80 @@ func NewConsumerGroup(brokers []string, group string, topics []string, opts ...C
 		"group", group,
 	))
 	cg.client = client
-	return cg
+	return cg, nil
 }
 
-func NewConsumerGroupFromConfig(config config.Kafka, consumerGroup config.KafkaConsumerGroup, opts ...ConfigOption) *ConsumerGroup {
+func NewConsumerGroupFromConfig(config config.Kafka, consumerGroup config.KafkaConsumerGroup, handler sarama.ConsumerGroupHandler, opts ...ConfigOption) (*ConsumerGroup, error) {
 	opts = append(opts, SetNetSASL(config.User, config.Password))
 	return NewConsumerGroup(
 		config.GetAddr(),
 		consumerGroup.GroupID,
 		consumerGroup.Topics,
+		handler,
 		SetConfigOptions(opts...),
 	)
 }
 
-func (r *ConsumerGroup) Setup(sess sarama.ConsumerGroupSession) error {
+func (r *ConsumerGroup) Run(ctx context.Context) error {
+	go func() {
+		for {
+			err := r.client.Consume(ctx, r.topics, r.handler)
+			if errors.Is(err, sarama.ErrClosedConsumerGroup) {
+				return
+			} else if err != nil {
+				r.log.Errorf("error from consumer: %v", err)
+			}
+			if ctx.Err() != nil {
+				return
+			}
+		}
+	}()
+
+	signal.Notify(r.sigterm, os.Interrupt, syscall.SIGTERM)
+	select {
+	case <-ctx.Done():
+		r.log.Debug("terminating: context cancelled")
+	case <-r.sigterm:
+		r.log.Debug("terminating: via signal")
+	}
+	return r.client.Close()
+}
+
+type ConsumerGroupHandler struct {
+	setup    func(s sarama.ConsumerGroupSession) error
+	cleanup  func(s sarama.ConsumerGroupSession) error
+	handlers map[string]MessageHandler // topic -> handler
+	logger   log.Logger
+	log      *log.Helper
+}
+
+func NewConsumerGroupHandler(handlers map[string]MessageHandler, opts ...ConsumerGroupHandlerOption) *ConsumerGroupHandler {
+	h := &ConsumerGroupHandler{
+		setup: func(_ sarama.ConsumerGroupSession) error {
+			return nil
+		},
+		cleanup: func(_ sarama.ConsumerGroupSession) error {
+			return nil
+		},
+		handlers: handlers,
+		logger:   log.DefaultLogger,
+	}
+	for _, opt := range opts {
+		opt(h)
+	}
+	h.log = log.NewHelper(log.With(h.logger, "module", "ConsumerGroupHandler"))
+	return h
+}
+
+func (r *ConsumerGroupHandler) Setup(sess sarama.ConsumerGroupSession) error {
 	return r.setup(sess)
 }
 
-func (r *ConsumerGroup) Cleanup(sess sarama.ConsumerGroupSession) error {
+func (r *ConsumerGroupHandler) Cleanup(sess sarama.ConsumerGroupSession) error {
 	return r.cleanup(sess)
 }
 
-func (r *ConsumerGroup) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+func (r *ConsumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for {
 		select {
 		case message, ok := <-claim.Messages():
@@ -113,10 +168,14 @@ func (r *ConsumerGroup) ConsumeClaim(session sarama.ConsumerGroupSession, claim 
 				r.log.Debug("message channel was closed")
 				return nil
 			}
-			if err := r.handler(message); err != nil {
-				r.log.Debugf("message error: topic = %s partition = %d offset = %d err = %v", message.Topic, message.Partition, message.Offset, err)
-				claim.HighWaterMarkOffset()
-				return err
+			if handler, ok := r.handlers[message.Topic]; ok {
+				if err := handler(message); err != nil {
+					r.log.Debugf("message error: topic = %s partition = %d offset = %d err = %v", message.Topic, message.Partition, message.Offset, err)
+					claim.HighWaterMarkOffset()
+					return err
+				}
+			} else {
+				return fmt.Errorf("topic: %s, not found handler", message.Topic)
 			}
 			r.log.Debugf("message claimed: topic = %s partition = %d offset = %d", message.Topic, message.Partition, message.Offset)
 			session.MarkMessage(message, "")
@@ -126,33 +185,6 @@ func (r *ConsumerGroup) ConsumeClaim(session sarama.ConsumerGroupSession, claim 
 	}
 }
 
-func (r *ConsumerGroup) Run(ctx context.Context, handler func(message *sarama.ConsumerMessage) error) error {
-	r.handler = handler
-	r.run = true
-	go func() {
-		for {
-			if r.run {
-				err := r.client.Consume(ctx, r.topics, r)
-				if errors.Is(err, sarama.ErrClosedConsumerGroup) {
-					return
-				} else if err != nil {
-					r.log.Errorf("error from consumer: %v", err)
-				}
-				if ctx.Err() != nil {
-					return
-				}
-			}
-		}
-	}()
-
-	signal.Notify(r.sigterm, os.Interrupt, syscall.SIGTERM)
-	select {
-	case <-ctx.Done():
-		r.run = false
-		r.log.Debug("terminating: context cancelled")
-	case <-r.sigterm:
-		r.run = false
-		r.log.Debug("terminating: via signal")
-	}
-	return r.client.Close()
+func (r *ConsumerGroupHandler) Register(topic string, handler MessageHandler) {
+	r.handlers[topic] = handler
 }
