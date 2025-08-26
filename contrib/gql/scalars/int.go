@@ -18,7 +18,7 @@ func MarshalInt64(t int64) graphql.Marshaler {
 
 func UnmarshalInt64(v any) (int64, error) {
 	switch v := v.(type) {
-	case string, int, uint, int64, uint64:
+	case string, int, uint, int32, uint32, int64, uint64:
 		return cast.ToInt64E(v)
 	case json.Number:
 		return v.Int64()
@@ -35,7 +35,7 @@ func MarshalInt8(t int8) graphql.Marshaler {
 
 func UnmarshalInt8(v any) (int8, error) {
 	switch v := v.(type) {
-	case string, int, uint, int8, uint8:
+	case string, int8, uint8, int, uint, int32, uint32, int64, uint64:
 		return cast.ToInt8E(v)
 	default:
 		return 0, fmt.Errorf("%T is not an int8", v)
@@ -50,7 +50,7 @@ func MarshalUint8(t uint8) graphql.Marshaler {
 
 func UnmarshalUint8(v any) (uint8, error) {
 	switch v := v.(type) {
-	case string, int, uint, int8, uint8:
+	case string, int8, uint8, int, uint, int32, uint32, int64, uint64:
 		return cast.ToUint8E(v)
 	default:
 		return 0, fmt.Errorf("%T is not an uint8", v)
@@ -65,7 +65,7 @@ func MarshalUint(t uint) graphql.Marshaler {
 
 func UnmarshalUint(v any) (uint, error) {
 	switch v := v.(type) {
-	case string, int, int64, uint, uint64:
+	case string, int8, uint8, int, uint, int32, uint32, int64, uint64:
 		return cast.ToUintE(v)
 	default:
 		return 0, fmt.Errorf("%T is not an uint", v)
