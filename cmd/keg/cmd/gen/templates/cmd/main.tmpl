@@ -6,8 +6,9 @@ import (
     "os"
 
     "github.com/go-keg/keg/contrib/tracing"
+    "github.com/go-keg/keg/contrib/log"
     "github.com/go-kratos/kratos/v2"
-    "github.com/go-kratos/kratos/v2/log"
+    klog "github.com/go-kratos/kratos/v2/log"
     "github.com/go-kratos/kratos/v2/transport/http"
     {{- if .UseGRPC}}
     "github.com/go-kratos/kratos/v2/transport/grpc"
@@ -44,10 +45,11 @@ func main() {
     rootCmd.Run = func(cmd *cobra.Command, args []string) {
         path, _ := cmd.Flags().GetString("conf")
         cfg := conf.MustLoad(path)
-        logger := zlog.NewKratosLoggerFromConfig(cfg.Log, Name,
-            "service.id", id,
-            "service.name", Name,
-            "service.version", Version,
+            logger := log.NewLoggerFromConfig(cfg.Log, Name,
+            log.ServiceName(Name),
+            log.ServiceVersion(Version),
+            log.ServiceInstanceID(id),
+            log.DeploymentEnvironment(os.Getenv("APP_ENV")),
         )
         tracing.SetTracerProvider(cfg.Trace.Endpoint,
             semconv.ServiceName(Name),
@@ -71,7 +73,7 @@ func main() {
     }
 }
 
-func newApp(logger log.Logger, hs *http.Server, {{if .UseGRPC}}gs *grpc.Server, {{end}} job *job.Job, schedule *schedule.Schedule) *kratos.App {
+func newApp(logger klog.Logger, hs *http.Server, {{if .UseGRPC}}gs *grpc.Server, {{end}} job *job.Job, schedule *schedule.Schedule) *kratos.App {
     return kratos.New(
         kratos.ID(id),
         kratos.Name(Name),

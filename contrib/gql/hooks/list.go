@@ -62,9 +62,11 @@ func GenerateList(graph *gen.Graph, schema *ast.Schema) error {
 					Description: fmt.Sprintf("Filtering options for %s returned from the connection.", name),
 				})
 			}
-			def.Description = ant.QueryField.Description
-			def.Directives = buildDirectives(ant.QueryField.Directives)
-			queryFields = append(queryFields, def)
+			if ant.QueryField != nil {
+				def.Description = ant.QueryField.Description
+				def.Directives = buildDirectives(ant.QueryField.Directives)
+				queryFields = append(queryFields, def)
+			}
 		}
 	}
 	for s, definition := range schema.Types {

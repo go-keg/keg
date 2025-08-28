@@ -7,9 +7,9 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	errors2 "github.com/go-keg/keg/contrib/errors"
-	zlog "github.com/go-keg/keg/contrib/log"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/vektah/gqlparser/v2/gqlerror"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const CustomErrorKey string = "custom"
@@ -86,7 +86,7 @@ func ErrorPresenter(logger log.Logger) func(ctx context.Context, err error) *gql
 		code := errors2.Err2HashCode(err)
 		_ = logger.Log(log.LevelError,
 			"module", "graphql/errors",
-			"traceId", zlog.TraceID(),
+			"traceId", trace.SpanContextFromContext(ctx).TraceID().String(),
 			"errCode", code,
 			"err", err,
 		)

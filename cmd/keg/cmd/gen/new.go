@@ -67,6 +67,7 @@ var Cmd = &cobra.Command{
 		if cfg.UseGraphQL {
 			files[fmt.Sprintf("internal/app/%s/service/graphql/generate.go", cfg.Name.KebabCase())] = "gql.generate.tmpl"
 			files[fmt.Sprintf("internal/app/%s/service/graphql/gqlgen.yml", cfg.Name.KebabCase())] = "gql.gqlgen.tmpl"
+			files[fmt.Sprintf("internal/app/%s/service/graphql/graphql.config.yml", cfg.Name.KebabCase())] = "gql.config.tmpl"
 			files[fmt.Sprintf("internal/app/%s/service/graphql/resolver.go", cfg.Name.KebabCase())] = "gql.resolver.tmpl"
 			files[fmt.Sprintf("internal/data/%s/ent/entc.go", cfg.DB.KebabCase())] = "entc.tmpl"
 		}
