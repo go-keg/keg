@@ -58,8 +58,16 @@ func ({{ $receiver }} *{{ $query }}) FirstCollectFields(ctx context.Context, pat
 {{ $opt := print $names.Node "PaginateOption" }}
 {{ $conn := $names.Connection }}
 {{ $newPager := print "new" $names.Node "Pager" }}
+
+{{ $list := print $names.Node "List" }}
+// {{ $list }} is the list to {{ $names.Node }}.
+type {{ $list }} struct {
+		Nodes 			[]*{{ $names.Node }} 	`json:"nodes"`
+		TotalCount 	int       						`json:"totalCount"`
+}
+
 // List executes the query and returns totalCount and nodes []*{{ $node.Name }}.
-func ({{ $receiver }} *{{ $query }}) List(ctx context.Context, offset, limit int, opts ...{{ $opt }}) (*{{ $conn }}, error) {
+func ({{ $receiver }} *{{ $query }}) List(ctx context.Context, offset, limit int, opts ...{{ $opt }}) (*{{ $list }}, error) {
 	pager, err := {{ $newPager }}(opts, false)
 	if err != nil {
 		return nil, err
@@ -67,8 +75,8 @@ func ({{ $receiver }} *{{ $query }}) List(ctx context.Context, offset, limit int
 	if _, err = pager.applyFilter({{ $receiver }}); err != nil {
 		return nil, err
 	}
-	conn := &{{ $conn }}{}
-	ignoredNodes := !hasCollectedField(ctx, edgesField, nodeField) && !hasCollectedField(ctx, nodesField)
+	conn := &{{ $list }}{}
+	ignoredNodes := !hasCollectedField(ctx, nodesField)
 	if hasCollectedField(ctx, totalCountField) {
 		hasPagination := limit != 0
 		if hasPagination || ignoredNodes {
@@ -85,11 +93,6 @@ func ({{ $receiver }} *{{ $query }}) List(ctx context.Context, offset, limit int
 	{{ $receiver }}.Offset(offset).Limit(limit)
 	if field := collectedField(ctx, nodesField); field != nil {
 		if err = {{ $receiver }}.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{nodesField}); err != nil {
-			return nil, err
-		}
-	}
-	if field := collectedField(ctx, edgesField, nodeField); field != nil {
-		if err := {{ $receiver }}.collectField(ctx, limit == 1, graphql.GetOperationContext(ctx), *field, []string{edgesField, nodeField}); err != nil {
 			return nil, err
 		}
 	}

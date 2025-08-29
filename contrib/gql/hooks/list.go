@@ -18,17 +18,31 @@ func GenerateList(graph *gen.Graph, schema *ast.Schema) error {
 		}
 		if ant.RelayConnection {
 			name := lo.CamelCase(node.Name)
+			listName := fmt.Sprintf("%sList", node.Name)
 			names := &entgql.PaginationNames{
-				Connection: fmt.Sprintf("%sConnection", node.Name),
-				Edge:       fmt.Sprintf("%sEdge", node.Name),
-				Node:       node.Name,
 				Order:      fmt.Sprintf("%sOrder", node.Name),
-				OrderField: fmt.Sprintf("%sOrderField", node.Name),
 				WhereInput: fmt.Sprintf("%sWhereInput", node.Name),
 			}
+			schema.AddTypes(&ast.Definition{
+				Name:        listName,
+				Kind:        ast.Object,
+				Description: "A connection to a list of items.",
+				Fields: []*ast.FieldDefinition{
+					{
+						Name:        "nodes",
+						Type:        ast.ListType(ast.NamedType(node.Name, nil), nil),
+						Description: "A list of nodes.",
+					},
+					{
+						Name:        "totalCount",
+						Type:        ast.NonNullNamedType("Int", nil),
+						Description: "Identifies the total count of items in the connection.",
+					},
+				},
+			})
 			def := &ast.FieldDefinition{
 				Name: name + "List",
-				Type: ast.NonNullNamedType(names.Connection, nil),
+				Type: ast.NonNullNamedType(listName, nil),
 				Arguments: ast.ArgumentDefinitionList{
 					{
 						Name:         "offset",
