@@ -3,7 +3,7 @@ package helpers
 import (
 	"crypto/md5" //nolint:gosec
 	"crypto/sha256"
-	"fmt"
+	"encoding/hex"
 	"time"
 )
 
@@ -25,13 +25,12 @@ func Throttle(ttl time.Duration) func(fn func()) {
 	}
 }
 
-func HashWithSHA256(data string) string {
-	h := sha256.New()
-	h.Write([]byte(data))
-	return fmt.Sprintf("%x", h.Sum(nil))
+func SHA256(data string) string {
+	hash := sha256.Sum256([]byte(data))
+	return hex.EncodeToString(hash[:])
 }
 
-func HashWithMD5(data string) string {
+func MD5(data string) string {
 	hash := md5.Sum([]byte(data)) //nolint:gosec
-	return fmt.Sprintf("%x", hash)
+	return hex.EncodeToString(hash[:])
 }

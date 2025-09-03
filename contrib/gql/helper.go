@@ -2,10 +2,15 @@ package gql
 
 import (
 	"context"
+	"fmt"
 	"reflect"
+	"sort"
+	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/go-keg/keg/contrib/helpers"
 	"github.com/samber/lo"
+	"github.com/vektah/gqlparser/v2/ast"
 )
 
 const (
@@ -99,4 +104,32 @@ func SomeWhere(items ...any) bool {
 		}
 	}
 	return false
+}
+
+// QueryFieldsHash generates a unique MD5 hash based on the selected GraphQL fields from the given query context.
+func QueryFieldsHash(ctx context.Context) string {
+	fields := graphql.CollectFieldsCtx(ctx, nil)
+	var content []string
+	for _, field := range fields {
+		content = append(content, fieldNames(field.Field)...)
+	}
+	sort.Slice(content, func(i, j int) bool {
+		return content[i] < content[j]
+	})
+	return helpers.MD5(strings.Join(content, ","))
+}
+
+func fieldNames(field *ast.Field) []string {
+	var names []string
+	if len(field.SelectionSet) > 0 {
+		var fs []string
+		for _, selection := range field.SelectionSet {
+			v := fieldNames(selection.(*ast.Field))
+			fs = append(fs, v...)
+		}
+		names = append(names, fmt.Sprintf("%s{%s}", field.Name, strings.Join(fs, ",")))
+	} else {
+		names = append(names, field.Name)
+	}
+	return names
 }
