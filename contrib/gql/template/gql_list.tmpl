@@ -17,41 +17,71 @@ import (
     "context"
 )
 
+type customCollectFieldsArgs struct {
+		path   []string
+		fields []string
+}
+
+type CustomCollectFieldsOption func(args *customCollectFieldsArgs)
+
+func WithPath(path ...string) CustomCollectFieldsOption {
+		return func(args *customCollectFieldsArgs) {
+				args.path = path
+		}
+}
+
+func WithFields(fields ...string) CustomCollectFieldsOption {
+		return func(args *customCollectFieldsArgs) {
+				args.fields = fields
+		}
+}
+
 {{ $gqlNodes := filterNodes $.Nodes (skipMode "type") }}
 {{ range $node := $gqlNodes }}
 
-{{ $receiver := $node.Receiver }}
+{{ $receiver := print "_" $node.Receiver }}
 {{ $query := $node.QueryName }}
 // CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
-func ({{ $receiver }} *{{ $query }}) CustomCollectFields(ctx context.Context, path ...string) (*{{ $query }}, error) {
-    fc := graphql.GetFieldContext(ctx)
+func ({{ $receiver }} *{{ $query }}) CustomCollectFields(ctx context.Context, opts ...CustomCollectFieldsOption) (*{{ $query }}, error) {
+		args := customCollectFieldsArgs{}
+		for _, opt := range opts {
+				opt(&args)
+		}
+		fc := graphql.GetFieldContext(ctx)
     if fc == nil {
         return {{ $receiver }}, nil
     }
-    if field := collectedField(ctx, path...); field != nil {
-        if err := {{ $receiver }}.collectField(ctx, true, graphql.GetOperationContext(ctx), *field, path); err != nil {
+    if field := collectedField(ctx, args.path...); field != nil {
+        if err := {{ $receiver }}.collectField(ctx, true, graphql.GetOperationContext(ctx), *field, args.path); err != nil {
             return nil, err
         }
     }
+		if len(args.fields) > 0 && len({{ $receiver }}.ctx.Fields) > 0 {
+				for _, field := range args.fields {
+						if !slices.Contains({{ $receiver }}.ctx.Fields, field) {
+								{{ $receiver }}.ctx.Fields = append({{ $receiver }}.ctx.Fields, field)
+						}
+				}
+		}
     return {{ $receiver }}, nil
 }
 
 // AllCollectFields
-func ({{ $receiver }} *{{ $query }}) AllCollectFields(ctx context.Context, path ...string) ([]*{{ $node.Name }}, error) {
-	_query, err := {{ $receiver }}.CustomCollectFields(ctx, path...)
+func ({{ $receiver }} *{{ $query }}) AllCollectFields(ctx context.Context, opts ...CustomCollectFieldsOption) ([]*{{ $node.Name }}, error) {
+	query, err := {{ $receiver }}.CustomCollectFields(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
-	return _query.All(ctx)
+	return query.All(ctx)
 }
 
 // FirstCollectFields
-func ({{ $receiver }} *{{ $query }}) FirstCollectFields(ctx context.Context, path ...string) (*{{ $node.Name }}, error) {
-	_query, err := {{ $receiver }}.CustomCollectFields(ctx, path...)
+func ({{ $receiver }} *{{ $query }}) FirstCollectFields(ctx context.Context, opts ...CustomCollectFieldsOption) (*{{ $node.Name }}, error) {
+	query, err := {{ $receiver }}.CustomCollectFields(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
-	return _query.First(ctx)
+	return query.First(ctx)
 }
 
 {{ $names := nodePaginationNames $node -}}
