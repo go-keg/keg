@@ -48,6 +48,13 @@ func EQ[T any](col string, v *T) *sql.Predicate {
 	return sql.EQ(col, *v)
 }
 
+func NEQ[T any](col string, v *T) *sql.Predicate {
+	if v == nil {
+		return nil
+	}
+	return sql.NEQ(col, *v)
+}
+
 func GT[T any](col string, v *T) *sql.Predicate {
 	if v == nil {
 		return nil

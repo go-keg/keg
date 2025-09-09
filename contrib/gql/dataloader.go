@@ -1,7 +1,9 @@
 package gql
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"errors"
 	"strconv"
 
@@ -18,6 +20,45 @@ func (k IntKey) String() string {
 
 func (k IntKey) Raw() any {
 	return int(k)
+}
+
+type StringsKey []byte
+
+func NewStringsKey(values ...string) dataloader.Key {
+	var buf bytes.Buffer
+	for _, v := range values {
+		err := binary.Write(&buf, binary.BigEndian, int32(len(v)))
+		if err != nil {
+			return nil
+		}
+		buf.WriteString(v)
+	}
+	return StringsKey(buf.Bytes())
+}
+
+func (r StringsKey) String() string {
+	return string(r)
+}
+
+func (r StringsKey) Raw() any {
+	return []byte(r)
+}
+
+func (r StringsKey) Split() ([]string, error) {
+	var result []string
+	buf := bytes.NewReader(r)
+	for buf.Len() > 0 {
+		var length int32
+		if err := binary.Read(buf, binary.BigEndian, &length); err != nil {
+			return nil, err
+		}
+		content := make([]byte, length)
+		if _, err := buf.Read(content); err != nil {
+			return nil, err
+		}
+		result = append(result, string(content))
+	}
+	return result, nil
 }
 
 type LoaderFunc func(ctx context.Context, keys dataloader.Keys) (map[dataloader.Key]any, error)
