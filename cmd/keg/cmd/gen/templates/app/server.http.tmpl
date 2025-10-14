@@ -4,20 +4,25 @@ package server
 import (
     {{- if .UseGraphQL}}
     "github.com/99designs/gqlgen/graphql"
-    "github.com/99designs/gqlgen/graphql/handler"
     "github.com/99designs/gqlgen/graphql/playground"
+    "github.com/go-keg/keg/contrib/gql"
     {{- end}}
     "github.com/go-kratos/kratos/v2/log"
     "github.com/go-kratos/kratos/v2/transport/http"
     "{{.GoModule}}/internal/app/{{.Name.KebabCase}}/conf"
+    "{{.GoModule}}/internal/app/{{.Name.KebabCase}}/service/graphql/dataloader"
 )
 
 // NewHTTPServer new HTTP server.
-func NewHTTPServer(c *conf.{{.Name.PascalCase}}, logger log.Logger{{if .UseGraphQL}}, schema graphql.ExecutableSchema{{end}}) *http.Server {
+func NewHTTPServer(c *conf.{{.Name.PascalCase}}, logger log.Logger{{if .UseGraphQL}}, schema graphql.ExecutableSchema, loader *dataloader.DataLoader{{end}}) *http.Server {
     server := http.NewServer(c.Server.HTTP.HttpOptions(logger)...)
     {{- if .UseGraphQL}}
-    server.Handle("/{{.Name.KebabCase}}/query", handler.NewDefaultServer(schema))
-    server.HandleFunc("/{{.Name.KebabCase}}/graphql-ui", playground.Handler("{{.Name.PascalCase}}", "/{{.Name.KebabCase}}/query"))
+    server.Handle("/{{.Name.KebabCase}}/query", dataloader.Middleware(loader, gql.NewServer(schema)))
+    server.HandleFunc("/{{.Name.KebabCase}}/graphql-ui", playground.Handler(
+        "{{.Name.PascalCase}}", "/{{.Name.KebabCase}}/query",
+        playground.WithGraphiqlEnablePluginExplorer(true),
+        playground.WithStoragePrefix("{{.Name.KebabCase}}"),
+    ))
     {{- end}}
     return server
 }

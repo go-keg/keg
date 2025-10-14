@@ -30,7 +30,7 @@ func GenerateList(graph *gen.Graph, schema *ast.Schema) error {
 				Fields: []*ast.FieldDefinition{
 					{
 						Name:        "nodes",
-						Type:        ast.ListType(ast.NamedType(node.Name, nil), nil),
+						Type:        ast.ListType(ast.NonNullNamedType(node.Name, nil), nil),
 						Description: "A list of nodes.",
 					},
 					{
@@ -57,6 +57,25 @@ func GenerateList(graph *gen.Graph, schema *ast.Schema) error {
 						Description:  "The maximum number of elements to return. This value cannot be negative.",
 					},
 				},
+			}
+			if _, ok := schema.Types[node.Name+"Edge"]; ok {
+				schema.Types[node.Name+"Edge"] = &ast.Definition{
+					Name:        node.Name+"Edge",
+					Kind:        ast.Object,
+					Description: "An edge in a connection.",
+					Fields: []*ast.FieldDefinition{
+						{
+							Name:        "node",
+							Type:        ast.NonNullNamedType(node.Name, nil),
+							Description: "The item at the end of the edge.",
+						},
+						{
+							Name:        "cursor",
+							Type:        ast.NonNullNamedType("Cursor", nil),
+							Description: "A cursor for use in pagination.",
+						},
+					},
+				}
 			}
 			if _, ok := schema.Types[names.Order]; ok {
 				orderT := ast.NamedType(names.Order, nil)

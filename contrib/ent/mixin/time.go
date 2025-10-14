@@ -38,8 +38,8 @@ func (TimeMixin) Indexes() []ent.Index {
 }
 
 func (r TimeMixin) Fields() []ent.Field {
-	createdAtOrder := "created_at"
-	updatedAtOrder := "updated_at"
+	createdAtOrder := "CREATED_AT"
+	updatedAtOrder := "UPDATED_AT"
 	switch r.SortFieldCaseStyle {
 	case NamingStylePascalCase:
 		createdAtOrder = lo.PascalCase(createdAtOrder)
@@ -48,9 +48,9 @@ func (r TimeMixin) Fields() []ent.Field {
 		createdAtOrder = lo.CamelCase(createdAtOrder)
 		updatedAtOrder = lo.CamelCase(updatedAtOrder)
 	case NamingStyleUpperCase:
-		createdAtOrder = strings.ToUpper(createdAtOrder)
-		updatedAtOrder = strings.ToUpper(updatedAtOrder)
 	case NamingStyleSnakeCase:
+		createdAtOrder = strings.ToLower(createdAtOrder)
+		updatedAtOrder = strings.ToLower(updatedAtOrder)
 	}
 	return []ent.Field{
 		field.Time("created_at").

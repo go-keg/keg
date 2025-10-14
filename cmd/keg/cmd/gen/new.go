@@ -70,6 +70,9 @@ var Cmd = &cobra.Command{
 			files[fmt.Sprintf("internal/app/%s/service/graphql/graphql.config.yml", cfg.Name.KebabCase())] = "gql.config.tmpl"
 			files[fmt.Sprintf("internal/app/%s/service/graphql/resolver.go", cfg.Name.KebabCase())] = "gql.resolver.tmpl"
 			files[fmt.Sprintf("internal/data/%s/ent/entc.go", cfg.DB.KebabCase())] = "entc.tmpl"
+			files[fmt.Sprintf("internal/app/%s/service/graphql/dataloader/dataloader.go", cfg.Name.KebabCase())] = "gql.dataloader.tmpl"
+			files[fmt.Sprintf("internal/app/%s/service/graphql/dataloader/loader.go", cfg.Name.KebabCase())] = "gql.loader.tmpl"
+			files[fmt.Sprintf("internal/app/%s/service/graphql/model/extend.go", cfg.Name.KebabCase())] = "gql.model_extend.tmpl"
 		}
 		for _path, tempName := range files {
 			if _, err := os.Stat(_path); os.IsNotExist(err) {

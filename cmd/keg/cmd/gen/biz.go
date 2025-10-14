@@ -41,8 +41,8 @@ func New{{.PascalCase}}UseCase(logger log.Logger, repo {{.PascalCase}}Repo) *{{.
 	}
 }
 
-func (a {{.PascalCase}}UseCase) Todo(ctx context.Context) (string, error) {
-	return a.repo.Todo(ctx)
+func (r {{.PascalCase}}UseCase) Todo(ctx context.Context) (string, error) {
+	return r.repo.Todo(ctx)
 }
 `
 	dataTemp = `package data
@@ -59,12 +59,12 @@ type {{.CamelCase}}Repo struct {
 }
 
 func New{{.PascalCase}}Repo(logger log.Logger) biz.{{.PascalCase}}Repo {
-	return {{.CamelCase}}Repo{
+	return &{{.CamelCase}}Repo{
 		log:  log.NewHelper(log.With(logger, "module", "data/{{.SnakeCase}}")),
 	}
 }
 
-func (a {{.CamelCase}}Repo) Todo(ctx context.Context) (string, error) {
+func (r {{.CamelCase}}Repo) Todo(ctx context.Context) (string, error) {
 	return "todo...", nil
 }
 `
