@@ -17,18 +17,43 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-func NewServer(es graphql.ExecutableSchema) *handler.Server {
+func WithWebsocket(ws transport.Websocket) ServerOption {
+	return func(args *serverArgs) {
+		args.websocket = ws
+	}
+}
+
+func SetQueryCache(cache graphql.Cache[*ast.QueryDocument]) ServerOption {
+	return func(args *serverArgs) {
+		args.queryCache = cache
+	}
+}
+
+type ServerOption func(args *serverArgs)
+type serverArgs struct {
+	websocket  transport.Websocket
+	queryCache graphql.Cache[*ast.QueryDocument]
+}
+
+func NewServer(es graphql.ExecutableSchema, opts ...ServerOption) *handler.Server {
+	args := &serverArgs{
+		websocket: transport.Websocket{
+			KeepAlivePingInterval: 10 * time.Second,
+		},
+		queryCache: lru.New[*ast.QueryDocument](1000),
+	}
+	for _, opt := range opts {
+		opt(args)
+	}
 	srv := handler.New(es)
 
-	srv.AddTransport(transport.Websocket{
-		KeepAlivePingInterval: 10 * time.Second,
-	})
+	srv.AddTransport(args.websocket)
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
 	srv.AddTransport(transport.POST{})
 	srv.AddTransport(transport.MultipartForm{})
 
-	srv.SetQueryCache(lru.New[*ast.QueryDocument](1000))
+	srv.SetQueryCache(args.queryCache)
 
 	srv.Use(extension.Introspection{})
 	srv.Use(extension.AutomaticPersistedQuery{
