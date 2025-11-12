@@ -4,16 +4,21 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	neturl "net/url"
 	"strings"
 	"time"
+
+	"github.com/go-kratos/kratos/v2/log"
+	"github.com/spf13/cast"
 )
 
 type Client struct {
 	client  *http.Client
 	baseURL string
+	headers map[string]string
 }
 
 type ClientOptionFunc func(c *Client)
@@ -39,6 +44,12 @@ func WithTimeout(d time.Duration) ClientOptionFunc {
 func WithBaseURL(baseURL string) ClientOptionFunc {
 	return func(c *Client) {
 		c.baseURL = baseURL
+	}
+}
+
+func WithHeaders(headers map[string]string) ClientOptionFunc {
+	return func(c *Client) {
+		c.headers = headers
 	}
 }
 
@@ -108,6 +119,11 @@ func (c Client) Request(ctx context.Context, method, url string, opts ...OptionF
 		}
 		req.URL.Path = parse.JoinPath(req.URL.Path).Path
 	}
+	for k, v := range c.headers {
+		if req.Header.Get(k) == "" {
+			req.Header.Set(k, v)
+		}
+	}
 	response, err := c.client.Do(req)
 	if err != nil {
 		return &Response{
@@ -143,14 +159,10 @@ func SetPathParams(params map[string]string) OptionFunc {
 	}
 }
 
-func SetFormData(data map[string]string) OptionFunc {
+func SetFormData(data map[string]any) OptionFunc {
 	return func(r *http.Request) {
-		body := neturl.Values{}
-		for k, v := range data {
-			body.Set(k, v)
-		}
 		r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		r.Body = io.NopCloser(strings.NewReader(body.Encode()))
+		r.Body = io.NopCloser(strings.NewReader(map2Values(data).Encode()))
 	}
 }
 
@@ -162,14 +174,44 @@ func SetBody(data any) OptionFunc {
 	}
 }
 
-func SetQueryParams(params map[string]string) OptionFunc {
-	return func(r *http.Request) {
-		q := r.URL.Query()
-		for k, v := range params {
-			q.Del(k)
-			q.Set(k, v)
+func map2Values(params map[string]any) neturl.Values {
+	query := neturl.Values{}
+	for key, val := range params {
+		switch v := val.(type) {
+		case int, int64, float64, bool:
+			query.Set(key, cast.ToString(v))
+		case string:
+			query.Set(key, v)
+		case []string:
+			query.Del(key)
+			for _, item := range v {
+				query.Add(key, item)
+			}
+		case []int:
+			query.Del(key)
+			for _, item := range v {
+				query.Add(key, cast.ToString(item))
+			}
+		case []int64:
+			query.Del(key)
+			for _, item := range v {
+				query.Add(key, cast.ToString(item))
+			}
+		case []float64:
+			query.Del(key)
+			for _, item := range v {
+				query.Add(key, cast.ToString(item))
+			}
+		default:
+			log.Warn(fmt.Sprintf("unsupported type: %T, key: %s", v, key))
 		}
-		r.URL.RawQuery = q.Encode()
+	}
+	return query
+}
+
+func SetQueryParams(params map[string]any) OptionFunc {
+	return func(r *http.Request) {
+		r.URL.RawQuery = map2Values(params).Encode()
 	}
 }
 

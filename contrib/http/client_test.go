@@ -50,6 +50,11 @@ func TestClient_Request(t *testing.T) {
 		switch r.Method {
 		case http.MethodGet:
 			assert.Equal(t, "bar", r.URL.Query().Get("foo"))
+			assert.Equal(t, "123", r.URL.Query().Get("num"))
+			assert.Equal(t, "true", r.URL.Query().Get("bool"))
+			assert.Equal(t, "1.23", r.URL.Query().Get("float"))
+			assert.Equal(t, []string{"a", "b", "c"}, r.URL.Query()["slice"])
+			assert.Equal(t, []string{"1", "2", "3"}, r.URL.Query()["slice_int"])
 			assert.Equal(t, "my-header-value", r.Header.Get("X-My-Header"))
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -66,6 +71,11 @@ func TestClient_Request(t *testing.T) {
 			assert.Equal(t, "application/x-www-form-urlencoded", r.Header.Get("Content-Type"))
 			r.ParseForm()
 			assert.Equal(t, "bar", r.FormValue("foo"))
+			assert.Equal(t, "123", r.FormValue("num"))
+			assert.Equal(t, "true", r.FormValue("bool"))
+			assert.Equal(t, "1.23", r.FormValue("float"))
+			assert.Equal(t, []string{"a", "b", "c"}, r.Form["slice"])
+			assert.Equal(t, []string{"1", "2", "3"}, r.Form["slice_int"])
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprintln(w, `{"message": "put successful"}`)
 		case http.MethodDelete:
@@ -82,7 +92,15 @@ func TestClient_Request(t *testing.T) {
 
 	t.Run("GET", func(t *testing.T) {
 		resp, err := client.Get(context.Background(), serverURL,
-			SetQueryParams(map[string]string{"foo": "bar"}),
+			SetQueryParams(map[string]any{
+				"foo":       "bar",
+				"num":       123,
+				"bool":      true,
+				"float":     1.23,
+				"slice":     []string{"a", "b", "c"},
+				"slice_int": []int{1, 2, 3},
+				"client":       http.Client{},
+			}),
 			SetHeader("X-My-Header", "my-header-value"),
 		)
 		assert.NoError(t, err)
@@ -106,7 +124,14 @@ func TestClient_Request(t *testing.T) {
 	})
 
 	t.Run("PUT with FormData", func(t *testing.T) {
-		resp, err := client.Put(context.Background(), serverURL, SetFormData(map[string]string{"foo": "bar"}))
+		resp, err := client.Put(context.Background(), serverURL, SetFormData(map[string]any{
+			"foo":       "bar",
+			"num":       123,
+			"bool":      true,
+			"float":     1.23,
+			"slice":     []string{"a", "b", "c"},
+			"slice_int": []int{1, 2, 3},
+		}))
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, resp.StatusCode())
 		var result map[string]string
