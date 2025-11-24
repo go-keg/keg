@@ -11,9 +11,9 @@ func NewClientSet(path string) *kubernetes.Clientset {
 		panic(err.Error())
 	}
 
-	clientset, err := kubernetes.NewForConfig(config)
+	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		panic(err.Error())
 	}
-	return clientset
+	return clientSet
 }

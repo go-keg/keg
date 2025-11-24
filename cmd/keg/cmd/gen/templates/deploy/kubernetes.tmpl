@@ -1,4 +1,4 @@
-{{- /* gotype: github.com/go-keg/keg/cmd/keg/config.App */}}
+{{- /* gotype: github.com/go-keg/keg/cmd/keg/config.App */ -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,6 +30,14 @@ spec:
           envFrom:
             - configMapRef:
                 name: monorepo-env
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/configs
+              readOnly: true
+      volumes:
+        - name: config-volume
+          configMap:
+            name: golang-{{.Name.KebabCase}}-config
 
 ---
 apiVersion: v1

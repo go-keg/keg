@@ -12,7 +12,7 @@ import (
 
 func Validate(ctx context.Context, obj any, next graphql.Resolver, pattern string, message *string) (res any, err error) {
 	path := graphql.GetPathContext(ctx)
-	if path.Field != nil {
+	if path != nil && path.Field != nil {
 		inputObject, ok := obj.(map[string]any)
 		if ok {
 			fieldValue := inputObject[*path.Field]
