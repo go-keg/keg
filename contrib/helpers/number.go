@@ -38,7 +38,6 @@ func FormatNumberRange(v int) string {
 		{500_000, "100K-500K"},
 		{1_000_000, "500K-1M"},
 		{10_000_000, "1M-10M"},
-		{1_000_000_000, "10M+"},
 	})
 }
 
@@ -57,8 +56,11 @@ type Range struct {
 }
 
 func FormatNumber(v int) string {
-	if v > 1000000 {
+	if v >= 1000000 {
 		return fmt.Sprintf("%.2fM", float64(v)/1000000)
 	}
-	return fmt.Sprintf("%.2fK", float64(v)/1000)
+	if v >= 1000 {
+		return fmt.Sprintf("%.2fK", float64(v)/1000)
+	}
+	return fmt.Sprintf("%d", v)
 }

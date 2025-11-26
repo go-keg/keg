@@ -1,11 +1,13 @@
 package alert
 
-import "fmt"
+import (
+	"log"
+)
 
 type Report func(record *ErrorRecord)
 
 var defaultReport Report = func(record *ErrorRecord) {
 	if record.Count == 1 {
-		fmt.Println("[ALERT] " + record.RawMsg)
+		log.Println("[ALERT] " + record.RawMsg)
 	}
 }
