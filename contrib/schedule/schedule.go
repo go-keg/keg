@@ -2,28 +2,43 @@ package schedule
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
+	"github.com/go-keg/keg/contrib/alert"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/redis/go-redis/v9"
 	"github.com/robfig/cron/v3"
 )
 
 type Schedule struct {
-	cron *cron.Cron
-	log  *log.Helper
+	cron  *cron.Cron
+	log   *log.Helper
+	alert alert.Alerter
 }
 
-func NewSchedule(logger log.Logger) *Schedule {
+type Option func(schedule *Schedule)
+
+func WithAlert(alert alert.Alerter) Option {
+	return func(schedule *Schedule) {
+		schedule.alert = alert
+	}
+}
+
+func NewSchedule(logger log.Logger, opts ...Option) *Schedule {
 	cronLog := cronLogger{log.NewHelper(log.With(logger, "module", "schedule/cron"))}
-	return &Schedule{
+	s := &Schedule{
 		log: log.NewHelper(log.With(logger, "module", "schedule")),
 		cron: cron.New(cron.WithChain(
 			cron.Recover(cronLog),
 			cron.DelayIfStillRunning(cronLog),
 		)),
 	}
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s
 }
 
 type ArgOption func(*scheduleArgs)
@@ -49,8 +64,8 @@ func (s Schedule) Add(name string, spec string, job func() error, opts ...ArgOpt
 
 	return s.cron.AddFunc(spec, func() {
 		s.log.Infof("run schedule: %s", name)
+		ctx := context.Background()
 		if args.lock != nil {
-			ctx := context.Background()
 			lock, err := args.lock(ctx)
 			if err != nil {
 				return
@@ -66,6 +81,9 @@ func (s Schedule) Add(name string, spec string, job func() error, opts ...ArgOpt
 				"name", name,
 				"err", err,
 			)
+			if s.alert != nil {
+				_ = s.alert.Alert(ctx, fmt.Sprintf("[schedule][%s] %s", name, err))
+			}
 		}
 	})
 }
@@ -89,11 +107,10 @@ func (s Schedule) AddCtx(ctx context.Context, name string, spec string, job func
 		}
 		err := job(ctx)
 		if err != nil {
-			s.log.Errorw(
-				"method", "schedule_err",
-				"name", name,
-				"err", err,
-			)
+			s.log.Errorw("method", "schedule_err", "name", name, "err", err)
+			if s.alert != nil {
+				_ = s.alert.Alert(ctx, fmt.Sprintf("[schedule][%s] %s", name, err))
+			}
 		}
 	})
 }
