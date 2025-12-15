@@ -127,9 +127,11 @@ func FillDefaultByKey(keys dataloader.Keys, result map[dataloader.Key]any, fn fu
 	return result
 }
 
-func LoadManyResult[T any](items []any, err []error) ([]T, error) {
-	if err != nil || items == nil {
-		return nil, errors.Join(err...)
+func LoadManyResult[T any](items []any, errs []error) ([]T, error) {
+	var err error
+	if len(errs) > 0 {
+		err = errors.Join(errs...)
+
 	}
 	return lo.FilterMap(items, func(item any, _ int) (T, bool) {
 		var t T
@@ -137,5 +139,5 @@ func LoadManyResult[T any](items []any, err []error) ([]T, error) {
 			return t, false
 		}
 		return item.(T), true
-	}), nil
+	}), err
 }

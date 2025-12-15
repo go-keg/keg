@@ -1,0 +1,62 @@
+{{- /* gotype: github.com/go-keg/keg/contrib/gql/plugins.DataloaderBuild*/ -}}
+import (
+	"context"
+	"{{.EntPath}}"
+	{{- range .Models}}
+	"{{$.EntPath}}/{{.ToLower}}"
+	{{- end}}
+
+	"github.com/go-keg/keg/contrib/gql"
+	"github.com/graph-gophers/dataloader"
+	"github.com/samber/lo"
+)
+
+type Loader struct {
+    ent     *ent.Client
+    opts    []dataloader.Option
+
+    {{- range .Models}}
+    {{.CamelCase}}	*dataloader.Loader
+    {{- end}}
+}
+
+func NewLoader(ent *ent.Client, opts ...dataloader.Option) *Loader {
+    l := &Loader{
+        ent:     ent,
+        opts:    opts,
+    }
+    {{- range .Models}}
+    l.{{.CamelCase}} = dataloader.NewBatchedLoader(gql.BatchFunc(l.load{{.PascalCase}}()), opts...)
+    {{- end}}
+    return l
+}
+
+{{range .Models}}
+func (r Loader) load{{.PascalCase}}() gql.LoaderFunc {
+    return func(ctx context.Context, keys dataloader.Keys) (map[dataloader.Key]any, error) {
+        items, err := r.ent.{{.PascalCase}}.Query().Where({{.ToLower}}.IDIn(gql.ToInts(keys)...)).All(ctx)
+        if err != nil {
+            return nil, err
+        }
+        return lo.SliceToMap(items, func(item *ent.{{.PascalCase}}) (dataloader.Key, any) {
+            return gql.IntKey(item.ID), item
+        }), nil
+    }
+}
+
+func (r Loader) Get{{.PascalCase}}(ctx context.Context, id int) (*ent.{{.PascalCase}}, error) {
+    thunk := r.{{.CamelCase}}.Load(ctx, gql.IntKey(id))
+    result, err := thunk()
+    if err != nil || result == nil {
+        return nil, err
+    }
+    return result.(*ent.{{.PascalCase}}), nil
+}
+
+func (r Loader) Get{{.Pluralize}}(ctx context.Context, ids []int) ([]*ent.{{.PascalCase}}, error) {
+    thunk := r.{{.CamelCase}}.LoadMany(ctx, lo.Map(ids, func(item int, index int) dataloader.Key {
+        return gql.IntKey(item)
+    }))
+    return gql.LoadManyResult[*ent.{{.PascalCase}}](thunk())
+}
+{{end}}
