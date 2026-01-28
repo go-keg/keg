@@ -1,4 +1,4 @@
-package errors
+package errs
 
 import (
 	"crypto/md5" //nolint:gosec
@@ -8,7 +8,7 @@ import (
 
 var replacer = strings.NewReplacer(" ", "0", "O", "0", "I", "1")
 
-func Err2HashCode(err error) string {
+func HashCode(err error) string {
 	msg := err.Error()
 	h := md5.Sum([]byte(msg)) //nolint:gosec
 	code := strings.ToUpper(fmt.Sprintf("%x", h)[0:4])

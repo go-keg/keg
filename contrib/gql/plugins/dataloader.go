@@ -47,9 +47,12 @@ func (m *Dataloader) GenerateCode(data *codegen.Data) error {
 		}),
 		EntPath: m.entPath,
 	}
-
+	packageName := data.Config.Resolver.Package
+	if s := strings.Split(m.filename, "/"); len(s) > 1 {
+		packageName = s[len(s)-2]
+	}
 	return templates.Render(templates.Options{
-		PackageName:     "dataloader",
+		PackageName:     packageName,
 		Filename:        m.filename,
 		Data:            build,
 		Packages:        data.Config.Packages,

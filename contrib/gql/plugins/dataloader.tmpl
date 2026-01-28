@@ -1,19 +1,18 @@
 {{- /* gotype: github.com/go-keg/keg/contrib/gql/plugins.DataloaderBuild*/ -}}
 import (
-	"context"
-	"{{.EntPath}}"
-	{{- range .Models}}
-	"{{$.EntPath}}/{{.ToLower}}"
-	{{- end}}
+    "context"
+    "{{.EntPath}}"
+    {{- range .Models}}
+    "{{$.EntPath}}/{{.ToLower}}"
+    {{- end}}
 
-	"github.com/go-keg/keg/contrib/gql"
-	"github.com/graph-gophers/dataloader"
-	"github.com/samber/lo"
+    "github.com/go-keg/keg/contrib/gql"
+    "github.com/graph-gophers/dataloader"
+    "github.com/samber/lo"
 )
 
 type Loader struct {
     ent     *ent.Client
-    opts    []dataloader.Option
 
     {{- range .Models}}
     {{.CamelCase}}	*dataloader.Loader
@@ -21,10 +20,7 @@ type Loader struct {
 }
 
 func NewLoader(ent *ent.Client, opts ...dataloader.Option) *Loader {
-    l := &Loader{
-        ent:     ent,
-        opts:    opts,
-    }
+    l := &Loader{ent: ent}
     {{- range .Models}}
     l.{{.CamelCase}} = dataloader.NewBatchedLoader(gql.BatchFunc(l.load{{.PascalCase}}()), opts...)
     {{- end}}

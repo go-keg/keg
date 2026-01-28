@@ -11,13 +11,21 @@ import (
     "github.com/go-kratos/kratos/v2/transport/http"
     "{{.GoModule}}/internal/app/{{.Name.KebabCase}}/conf"
     "{{.GoModule}}/internal/app/{{.Name.KebabCase}}/service/graphql/dataloader"
+    "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 // NewHTTPServer new HTTP server.
 func NewHTTPServer(c *conf.{{.Name.PascalCase}}, logger log.Logger{{if .UseGraphQL}}, schema graphql.ExecutableSchema, loader *dataloader.DataLoader{{end}}) *http.Server {
     server := http.NewServer(c.Server.HTTP.HttpOptions(logger)...)
     {{- if .UseGraphQL}}
-    server.Handle("/{{.Name.KebabCase}}/query", dataloader.Middleware(loader, gql.NewServer(schema)))
+    gqlSrv := gql.NewServer(schema)
+    gqlSrv.AroundOperations(gql.TraceAroundOperations(func(ctx context.Context, next graphql.OperationHandler) graphql.ResponseHandler {
+        return next(ctx)
+    }))
+    gqlSrv.AroundResponses(gql.TraceAroundResponses(func(ctx context.Context, next graphql.ResponseHandler) *graphql.Response {
+        return next(ctx)
+    }))
+    server.Handle("/{{.Name.KebabCase}}/query", otelhttp.NewHandler(dataloader.Middleware(loader, gqlSrv), "/{{.Name.KebabCase}}/query"))
     server.HandleFunc("/{{.Name.KebabCase}}/graphql-ui", playground.Handler(
         "{{.Name.PascalCase}}", "/{{.Name.KebabCase}}/query",
         playground.WithGraphiqlEnablePluginExplorer(true),

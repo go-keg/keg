@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
-	errors2 "github.com/go-keg/keg/contrib/errors"
+	"github.com/go-keg/keg/contrib/errs"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.opentelemetry.io/otel/trace"
@@ -83,7 +83,7 @@ func ErrorPresenter(logger log.Logger) func(ctx context.Context, err error) *gql
 		if errors.As(err, &gqlErr) && gqlErr.Err == nil {
 			return gqlErr
 		}
-		code := errors2.Err2HashCode(err)
+		code := errs.HashCode(err)
 		_ = logger.Log(log.LevelError,
 			"module", "graphql/errors",
 			"traceId", trace.SpanContextFromContext(ctx).TraceID().String(),
