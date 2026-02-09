@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 
@@ -27,7 +26,7 @@ func (a Enums) Hooks() []gen.Hook {
 		func(next gen.Generator) gen.Generator {
 			return gen.GenerateFunc(func(g *gen.Graph) error {
 				for _, n := range g.Nodes {
-					if err := generateEnums(n); err != nil {
+					if err := generateEnums(g, n); err != nil {
 						return err
 					}
 				}
@@ -37,11 +36,10 @@ func (a Enums) Hooks() []gen.Hook {
 	}
 }
 
-func generateEnums(n *gen.Type) error {
+func generateEnums(g *gen.Graph, n *gen.Type) error {
 	if len(n.EnumFields()) > 0 {
 		dir := strings.ToLower(n.Name)
-		_, file, _, _ := runtime.Caller(10)
-		path := filepath.Join(filepath.Dir(file), dir, "enum_desc.go")
+		path := filepath.Join(g.Target, dir, "enum_desc.go")
 		content := renderEnums(n)
 		return os.WriteFile(path, []byte(content), 0644)
 	}
