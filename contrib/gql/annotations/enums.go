@@ -11,6 +11,8 @@ import (
 	"entgo.io/ent/entc/gen"
 	"github.com/samber/lo"
 	"github.com/vektah/gqlparser/v2/ast"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 )
 
 const EnumName = "enums"
@@ -34,6 +36,12 @@ func (a Enums) Hooks() []gen.Hook {
 			})
 		},
 	}
+}
+
+func (a Enums) Keys() []string {
+	keys := maps.Keys(a)
+	slices.Sort(keys)
+	return keys
 }
 
 func generateEnums(g *gen.Graph, n *gen.Type) error {
