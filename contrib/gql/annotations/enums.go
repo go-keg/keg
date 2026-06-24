@@ -49,6 +49,10 @@ func generateEnums(g *gen.Graph, n *gen.Type) error {
 		dir := strings.ToLower(n.Name)
 		path := filepath.Join(g.Target, dir, "enum_desc.go")
 		content := renderEnums(n)
+		err := os.MkdirAll(filepath.Dir(path), 0755)
+		if err != nil {
+			panic(err)
+		}
 		return os.WriteFile(path, []byte(content), 0644)
 	}
 	return nil
@@ -86,15 +90,13 @@ func (a Enums) Options() []entc.Option {
 func EnumsGQLSchemaHook(graph *gen.Graph, schema *ast.Schema) error {
 	for _, node := range graph.Nodes {
 		for _, field := range node.Fields {
-			for k, v := range field.Annotations {
-				if k == EnumName {
-					if enums, ok := v.(map[string]any); ok {
-						if enum, ok := schema.Types[node.Name+lo.PascalCase(field.Name)]; ok {
-							if enum.Kind == ast.Enum {
-								for _, value := range enum.EnumValues {
-									if item, ok := enums[value.Name]; ok {
-										value.Description = item.(string)
-									}
+			if v, ok := field.Annotations[EnumName]; ok {
+				if enums, ok := v.(map[string]any); ok {
+					if enum, ok := schema.Types[node.Name+lo.PascalCase(field.Name)]; ok {
+						if enum.Kind == ast.Enum {
+							for _, value := range enum.EnumValues {
+								if item, ok := enums[value.Name]; ok {
+									value.Description = item.(string)
 								}
 							}
 						}
