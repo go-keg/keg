@@ -11,13 +11,18 @@ import (
 	"entgo.io/ent/entc/gen"
 	"github.com/samber/lo"
 	"github.com/vektah/gqlparser/v2/ast"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 )
 
 const EnumName = "enums"
+const EnumListName = "enums_list"
 
 type Enums map[string]string
+type EnumsList []Enum
+
+type Enum struct {
+	Key  string
+	Desc string
+}
 
 func (a Enums) Name() string {
 	return EnumName
@@ -36,12 +41,6 @@ func (a Enums) Hooks() []gen.Hook {
 			})
 		},
 	}
-}
-
-func (a Enums) Keys() []string {
-	keys := maps.Keys(a)
-	slices.Sort(keys)
-	return keys
 }
 
 func generateEnums(g *gen.Graph, n *gen.Type) error {
@@ -70,6 +69,19 @@ func renderEnums(n *gen.Type) string {
 				fmt.Fprintf(&b, "\t\t%s: %s,\n", enum.Name, strconv.Quote(v.(map[string]any)[enum.Value].(string)))
 			}
 			fmt.Fprintf(&b, "\t}[r]\n}\n")
+		} else if v, ok = field.Annotations[EnumListName]; ok {
+			fmt.Fprintf(&b, "func (r %s) Description() string {\n", field.StructField())
+			fmt.Fprintf(&b, "\treturn map[%s]string{\n", field.StructField())
+			for _, enum := range field.Enums {
+				for _, vv := range v.([]any) {
+					if key, ok := vv.(map[string]any)["Key"]; ok && key == enum.Value {
+						if desc, ok := vv.(map[string]any)["Desc"]; ok {
+							fmt.Fprintf(&b, "\t\t%s: %s,\n", enum.Name, strconv.Quote(desc.(string)))
+						}
+					}
+				}
+			}
+			fmt.Fprintf(&b, "\t}[r]\n}\n")
 		}
 	}
 	return b.String()
@@ -90,13 +102,25 @@ func (a Enums) Options() []entc.Option {
 func EnumsGQLSchemaHook(graph *gen.Graph, schema *ast.Schema) error {
 	for _, node := range graph.Nodes {
 		for _, field := range node.Fields {
-			if v, ok := field.Annotations[EnumName]; ok {
-				if enums, ok := v.(map[string]any); ok {
-					if enum, ok := schema.Types[node.Name+lo.PascalCase(field.Name)]; ok {
-						if enum.Kind == ast.Enum {
+			if enum, ok := schema.Types[node.Name+lo.PascalCase(field.Name)]; ok {
+				if enum.Kind == ast.Enum {
+					if v, ok := field.Annotations[EnumName]; ok {
+						if enums, ok := v.(map[string]any); ok {
 							for _, value := range enum.EnumValues {
 								if item, ok := enums[value.Name]; ok {
 									value.Description = item.(string)
+								}
+							}
+						}
+					} else if v, ok = field.Annotations[EnumListName]; ok {
+						if enums, ok := v.([]any); ok {
+							for _, value := range enum.EnumValues {
+								for _, vv := range enums {
+									if key, ok := vv.(map[string]any)["Key"]; ok && key == value.Name {
+										if desc, ok := vv.(map[string]any)["Desc"]; ok {
+											value.Description = desc.(string)
+										}
+									}
 								}
 							}
 						}
@@ -105,5 +129,53 @@ func EnumsGQLSchemaHook(graph *gen.Graph, schema *ast.Schema) error {
 			}
 		}
 	}
+	return nil
+}
+
+func (a EnumsList) Name() string {
+	return EnumListName
+}
+
+func (a EnumsList) Hooks() []gen.Hook {
+	return []gen.Hook{
+		func(next gen.Generator) gen.Generator {
+			return gen.GenerateFunc(func(g *gen.Graph) error {
+				for _, n := range g.Nodes {
+					if err := generateEnums(g, n); err != nil {
+						return err
+					}
+				}
+				return next.Generate(g)
+			})
+		},
+	}
+}
+
+func (a EnumsList) Keys() []string {
+	keys := make([]string, len(a))
+	for i, enum := range a {
+		keys[i] = enum.Key
+	}
+	return keys
+}
+
+func (a EnumsList) Description(key string) string {
+	for _, s := range a {
+		if s.Key == key {
+			return s.Desc
+		}
+	}
+	return ""
+}
+
+func (a EnumsList) Annotations() []entc.Annotation {
+	return nil
+}
+
+func (a EnumsList) Templates() []*gen.Template {
+	return nil
+}
+
+func (a EnumsList) Options() []entc.Option {
 	return nil
 }
