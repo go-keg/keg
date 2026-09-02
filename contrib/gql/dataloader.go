@@ -22,7 +22,7 @@ func (k IntKey) Raw() any {
 	return int(k)
 }
 
-type StringsKey []byte
+type StringsKey string
 
 func NewStringsKey(values ...string) dataloader.Key {
 	var buf bytes.Buffer
@@ -33,7 +33,7 @@ func NewStringsKey(values ...string) dataloader.Key {
 		}
 		buf.WriteString(v)
 	}
-	return StringsKey(buf.Bytes())
+	return StringsKey(buf.String())
 }
 
 func (r StringsKey) String() string {
@@ -46,7 +46,7 @@ func (r StringsKey) Raw() any {
 
 func (r StringsKey) Split() ([]string, error) {
 	var result []string
-	buf := bytes.NewReader(r)
+	buf := bytes.NewReader([]byte(r))
 	for buf.Len() > 0 {
 		var length int32
 		if err := binary.Read(buf, binary.BigEndian, &length); err != nil {
